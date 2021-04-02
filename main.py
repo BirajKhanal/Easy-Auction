@@ -21,6 +21,7 @@ def get_db():
         db.close()
 
 
+# apple
 @app.post("/products/", response_model=auctionSchemas.Product)
 def create_product(product: auctionSchemas.ProductCreate, db: Session = Depends(get_db)):
     return auctionCrud.create_product(db=db, product=product)
