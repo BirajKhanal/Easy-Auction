@@ -1,3 +1,5 @@
+from database import SessionLocal, engine
+
 
 def get_db():
     db = SessionLocal()

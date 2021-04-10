@@ -8,8 +8,6 @@ from ..dependencies import get_db
 
 router = APIRouter()
 
-auctionModel.Base.metadata.create_all(bind=engine)
-
 
 @router.post("/products/", response_model=auctionSchemas.Product)
 def create_product(product: auctionSchemas.ProductCreate, db: Session = Depends(get_db)):
