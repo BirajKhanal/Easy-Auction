@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
-from app.api import deps
+from app.api import dependencies
 from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash
@@ -21,7 +21,7 @@ router = APIRouter()
 
 @router.post("/login/access-token", response_model=schemas.Token)
 def login_access_token(
-    db: Session = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()
+    db: Session = Depends(dependencies.get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """
     OAuth2 compatible token login, get an access token for future requests
@@ -29,6 +29,7 @@ def login_access_token(
     user = crud.user.authenticate(
         db, email=form_data.username, password=form_data.password
     )
+    print("hello world")
     if not user:
         raise HTTPException(
             status_code=400, detail="Incorrect email or password")
@@ -45,7 +46,7 @@ def login_access_token(
 
 
 @router.post("/login/test-token", response_model=schemas.User)
-def test_token(current_user: models.User = Depends(deps.get_current_user)) -> Any:
+def test_token(current_user: models.User = Depends(dependencies.get_current_user)) -> Any:
     """
     Test access token
     """
@@ -53,7 +54,7 @@ def test_token(current_user: models.User = Depends(deps.get_current_user)) -> An
 
 
 @router.post("/password-recovery/{email}", response_model=schemas.Msg)
-def recover_password(email: str, db: Session = Depends(deps.get_db)) -> Any:
+def recover_password(email: str, db: Session = Depends(dependencies.get_db)) -> Any:
     """
     Password Recovery
     """
@@ -75,7 +76,7 @@ def recover_password(email: str, db: Session = Depends(deps.get_db)) -> Any:
 def reset_password(
     token: str = Body(...),
     new_password: str = Body(...),
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(dependencies.get_db),
 ) -> Any:
     """
     Reset password

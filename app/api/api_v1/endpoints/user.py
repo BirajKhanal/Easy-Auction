@@ -88,8 +88,8 @@ def read_user_me(
     return current_user
 
 
-@router.post("/open", response_model=schemas.User)
-def create_user_open(
+@router.post("/register", response_model=schemas.User)
+def register_user(
     *,
     db: Session = Depends(dependencies.get_db),
     password: str = Body(...),
@@ -99,11 +99,6 @@ def create_user_open(
     """
     Create new user without the need to be logged in.
     """
-    if not settings.USERS_OPEN_REGISTRATION:
-        raise HTTPException(
-            status_code=403,
-            detail="Open user registration is forbidden on this server",
-        )
     user = crud.user.get_by_email(db, email=email)
     if user:
         raise HTTPException(
