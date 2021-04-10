@@ -6,4 +6,4 @@ venv/
 
 .mypy_cache/
 
-sqll_app.db
+sql_app.db
