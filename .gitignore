@@ -5,3 +5,5 @@ venv/
 .vscode/
 
 .mypy_cache/
+
+sqll_app.db
