@@ -1,5 +1,5 @@
+from dotenv import load_dotenv
 from app.db.base import Base
-from app.models import auction, product, comment, sell, user  # This helps alembic autogeneration
 import sys
 import os
 from logging.config import fileConfig
@@ -20,15 +20,18 @@ fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(base_dir)
-target_metadata = Base.metadata
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+sys.path.append(BASE_DIR)
+
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
 
 def get_url():
     return os.getenv("SQLALCHEMY_DATABASE_URI", "postgresql://postgres:password@localhost/auctiondb")
