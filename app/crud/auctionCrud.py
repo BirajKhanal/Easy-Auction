@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.models import Auction, Product
+from app.models import auction, product
 from app.schemas import auctionSchemas
 
 

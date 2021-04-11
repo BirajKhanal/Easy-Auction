@@ -3,15 +3,26 @@ from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
-from app.models.auction import Auction
+from app.models.user import User
 
 
 class Product(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     description = Column(String)
-    category = Column(String)
     product_condition = Column(String)
-    reserv = Column(Integer)
+    img = Column(String)
 
-    auction = relationship("Auction", back_populates="items")
+    usr_id = Column(Integer, ForeignKey('user.id'))
+
+
+class Category(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+
+
+class Product_Category(Base):
+    id = Column(Integer, primary_key=True, index=True)
+
+    cat_id = Column(Integer, ForeignKey('category.id'))
+    prod_id = Column(Integer, ForeignKey('product.id'))

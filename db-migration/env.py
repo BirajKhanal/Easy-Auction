@@ -1,5 +1,5 @@
 from app.db.base import Base
-from app.models import Auction, Product  # This helps alembic autogeneration
+from app.models import auction, product, comment, sell, user  # This helps alembic autogeneration
 import sys
 import os
 from logging.config import fileConfig
@@ -31,7 +31,7 @@ target_metadata = Base.metadata
 # ... etc.
 
 def get_url():
-    return os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///./sql_app.db")
+    return os.getenv("SQLALCHEMY_DATABASE_URI", "postgresql://postgres:password@localhost/auctiondb")
 
 
 def run_migrations_offline():

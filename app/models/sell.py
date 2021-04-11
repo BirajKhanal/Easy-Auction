@@ -4,21 +4,20 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 from app.models.product import Product
+from app.models.user import User
 
 
-class Auctionable(Base):
+class Sellable(Base):
     id = Column(Integer, primary_key=True, index=True)
-    # starting_date = Column(Integer)
-    # ending_date = Column(Integer)
-    bid_cap = Column(Float)
-    starting_bid = Column(Float)
+    price = Column(Float)
+    discount = Column(Float)
+    quantity = Column(Integer)
 
     prod_id = Column(Integer, ForeignKey('product.id'))
 
-class Auction(Base):
+class Cart(Base):
     id = Column(Integer, primary_key=True, index=True)
-    duration = Column(Float)
-    current_bid = Column(Float)
+    quantity = Column(Integer)
 
-    prod_auc_id = Column(Integer, ForeignKey('product.id'))
+    prod_sell = Column(Integer, ForeignKey('product.id'))
 
