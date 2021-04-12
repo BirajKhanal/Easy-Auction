@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Float
+from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -12,13 +12,16 @@ class Auctionable(Base):
     # ending_date = Column(Integer)
     bid_cap = Column(Float)
     starting_bid = Column(Float)
-
     prod_id = Column(Integer, ForeignKey('product.id'))
+
+    product = relationship("Product")
+
 
 class Auction(Base):
     id = Column(Integer, primary_key=True, index=True)
     duration = Column(Float)
+    start_timestamp = Column(DateTime)
     current_bid = Column(Float)
+    prod_auc_id = Column(Integer, ForeignKey('auctionable.id'))
 
-    prod_auc_id = Column(Integer, ForeignKey('product.id'))
-
+    auctionable = relationship("Auctionable")

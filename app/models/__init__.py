@@ -7,7 +7,6 @@ from app.models.comment import (Comment)
 from app.models.product import (
     Product,
     Category,
-    Product_Category
 )
 
 from app.models.sell import (

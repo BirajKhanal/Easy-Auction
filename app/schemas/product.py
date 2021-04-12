@@ -3,25 +3,9 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class AuctionBase(BaseModel):
-    selling_price: int
-
-
-class AuctionCreate(AuctionBase):
-    pass
-
-
-class Auciton(AuctionBase):
-    id: int
-    product_id: int
-
-    class Config:
-        orm_mode = True
-
-
 class ProductBase(BaseModel):
     description: Optional[str] = None
-    product_condition: str 
+    product_condition: str
 
 
 class ProductCreate(ProductBase):

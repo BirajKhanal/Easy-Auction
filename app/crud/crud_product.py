@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
-from app.models import auction, product
-from app.schemas import auctionSchemas
+from app.models.product import Product
+from app.schemas import product as prodcutSchema
 
 
 def get_product(db: Session, product_id: int):
@@ -12,7 +12,7 @@ def get_products(db: Session, skip: int = 0, limit: int = 5):
     return db.query(Product).offset(skip).limit(limit).all()
 
 
-def create_product(db: Session, product: auctionSchemas.ProductCreate):
+def create_product(db: Session, product: prodcutSchema.ProductCreate):
     name = product.name
     category = product.category
     reserv = product.reserv
