@@ -15,11 +15,12 @@ class Product(Base):
     name = Column(String)
     description = Column(String)
     product_condition = Column(String)
-    img = Column(String)
 
     usr_id = Column(Integer, ForeignKey('user.id'))
 
+    owner = relationship("User", back_populates='products')
     comments = relationship("Comment", back_populates="product")
+    images = relationship("Image", back_populates="product")
     categories = relationship(
         "Category", secondary=product_category, back_populates="products")
 

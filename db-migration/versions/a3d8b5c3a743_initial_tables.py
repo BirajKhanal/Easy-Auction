@@ -1,8 +1,8 @@
 """Initial tables
 
-Revision ID: 68bc0ac7c47e
+Revision ID: a3d8b5c3a743
 Revises: 
-Create Date: 2021-04-12 13:11:32.716658
+Create Date: 2021-04-13 20:17:11.114769
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '68bc0ac7c47e'
+revision = 'a3d8b5c3a743'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -46,7 +46,6 @@ def upgrade():
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('product_condition', sa.String(), nullable=True),
-    sa.Column('img', sa.String(), nullable=True),
     sa.Column('usr_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['usr_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -80,6 +79,17 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_comment_id'), 'comment', ['id'], unique=False)
+    op.create_table('image',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('description', sa.String(), nullable=True),
+    sa.Column('img_url', sa.String(), nullable=False),
+    sa.Column('usr_id', sa.Integer(), nullable=True),
+    sa.Column('prod_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['prod_id'], ['product.id'], ),
+    sa.ForeignKeyConstraint(['usr_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_image_id'), 'image', ['id'], unique=False)
     op.create_table('product_category',
     sa.Column('product_id', sa.Integer(), nullable=True),
     sa.Column('category_id', sa.Integer(), nullable=True),
@@ -123,6 +133,8 @@ def downgrade():
     op.drop_index(op.f('ix_sellable_id'), table_name='sellable')
     op.drop_table('sellable')
     op.drop_table('product_category')
+    op.drop_index(op.f('ix_image_id'), table_name='image')
+    op.drop_table('image')
     op.drop_index(op.f('ix_comment_id'), table_name='comment')
     op.drop_table('comment')
     op.drop_index(op.f('ix_auctionable_id'), table_name='auctionable')

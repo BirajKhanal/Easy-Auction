@@ -8,8 +8,6 @@ from app.models.product import Product
 
 class Auctionable(Base):
     id = Column(Integer, primary_key=True, index=True)
-    # starting_date = Column(Integer)
-    # ending_date = Column(Integer)
     bid_cap = Column(Float)
     starting_bid = Column(Float)
     prod_id = Column(Integer, ForeignKey('product.id'))

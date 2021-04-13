@@ -18,3 +18,7 @@ from app.models.user import (
     User,
     Rating
 )
+
+from app.models.image import (
+    Image
+)

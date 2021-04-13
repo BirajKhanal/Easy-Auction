@@ -4,13 +4,13 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
-class Comment(Base):
+class Image(Base):
     id = Column(Integer, primary_key=True, index=True)
-    detail = Column(String)
-    title = Column(String)
+    description = Column(String)
+    img_url = Column(String, nullable=False)
 
     usr_id = Column(Integer, ForeignKey('user.id'))
     prod_id = Column(Integer, ForeignKey('product.id'))
 
-    owner = relationship('User', back_populates='comments')
-    product = relationship('Product', back_populates='comments')
+    owner = relationship('User', back_populates='images')
+    product = relationship('Product', back_populates='images')

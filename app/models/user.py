@@ -12,6 +12,9 @@ class User(Base):
     rating = relationship("Rating")
     is_active = Column(Boolean, default=True)
 
+    comments = relationship('Comment', back_populates='owner')
+    products = relationship('Product', back_populates='owner')
+
 
 class Rating(Base):
     id = Column(Integer, primary_key=True, index=True)
