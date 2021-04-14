@@ -13,6 +13,7 @@ class CRUDCategory(CRUDBase[Category, CategoryCreate, CategoryUpdate]):
     def get_multi_categories(self, db: Session, categories: List[str]) -> List[Category]:
         cat_list: List[Category] = []
         for item in categories:
+            # TODO: if frontend sends category_id change this and schema too
             cat_list.append(self.get_with_name(db=db, name=item))
         return cat_list
 

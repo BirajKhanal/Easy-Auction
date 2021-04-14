@@ -1,19 +1,18 @@
 from typing import List, Optional
 
 from pydantic import BaseModel, HttpUrl
-from app.schemas.user import User
+from app.schemas.product import Product
 
 
 class SellableBase(BaseModel):
     price: Optional[float]
     discount: Optional[float]
     quantity: Optional[int]
-    prod_id: Optional[int]
 
 
 class SellableCreate(SellableBase):
     price: float
-    prod_id: int
+    quantity: int = 1
 
 
 class SellableUpdate(SellableBase):
@@ -22,6 +21,7 @@ class SellableUpdate(SellableBase):
 
 class Sellable(SellableBase):
     id: Optional[int]
+    product: Product
 
     class Config:
         orm_mode = True

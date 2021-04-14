@@ -1,22 +1,26 @@
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel
+from app.schemas.product import Product
 
 
 class AuctionableBase(BaseModel):
     bid_cap: Optional[float]
     starting_bid: Optional[float]
-    prod_id: Optional[int]
 
 
 class AuctionableCreate(AuctionableBase):
     bid_cap: float
     starting_bid: float
-    prod_id: int
 
 
-class Aucitonable(AuctionableBase):
+class AuctionableUpdate(AuctionableBase):
+    pass
+
+
+class Auctionable(AuctionableBase):
     id: Optional[int]
+    product: Product
 
     class Config:
         orm_mode = True

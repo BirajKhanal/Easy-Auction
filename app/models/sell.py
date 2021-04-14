@@ -18,6 +18,8 @@ class Sellable(Base):
 
     prod_id = Column(Integer, ForeignKey('product.id'))
 
+    product = relationship("Product")
+
 
 class Cart(Base):
     id = Column(Integer, primary_key=True, index=True)

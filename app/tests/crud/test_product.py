@@ -1,17 +1,16 @@
 from sqlalchemy.orm import Session
 
 from app import crud
+from app.schemas.category import CategoryCreate
 from app.schemas.product import ProductCreate, ProductUpdate
 from app.tests.utils.user import create_random_user
 from app.tests.utils.utils import random_lower_string
 
 
-def test_create_product(db: Session) -> None:
+def test_create_product_without_category(db: Session) -> None:
     name = random_lower_string()
     description = random_lower_string()
     product_condition = random_lower_string()
-    # TODO: add test for product creation including category
-    # TODO: add test for no category product creation
     product_in = ProductCreate(
         name=name, description=description, product_condition=product_condition)
     user = create_random_user(db)
@@ -21,6 +20,30 @@ def test_create_product(db: Session) -> None:
     assert product.description == description
     assert product.product_condition == product_condition
     assert product.usr_id == user.id
+
+
+def test_create_product_with_category(db: Session) -> None:
+    name = random_lower_string()
+    description = random_lower_string()
+    product_condition = random_lower_string()
+    category_name1 = random_lower_string()
+    category_name2 = random_lower_string()
+    category_in1 = CategoryCreate(name=category_name1)
+    category_in2 = CategoryCreate(name=category_name2)
+    category1 = crud.crud_category.category.create(db, obj_in=category_in1)
+    category2 = crud.crud_category.category.create(db, obj_in=category_in2)
+
+    product_in = ProductCreate(
+        name=name, description=description, product_condition=product_condition, categories=[category_name1, category_name2])
+    user = create_random_user(db)
+    product = crud.product.create_with_owner(
+        db=db, obj_in=product_in, usr_id=user.id)
+    assert product.name == name
+    assert product.description == description
+    assert product.product_condition == product_condition
+    assert product.usr_id == user.id
+    assert product.categories[0].name == category_in1.name
+    assert product.categories[1].name == category_in2.name
 
 
 def test_get_product(db: Session) -> None:
