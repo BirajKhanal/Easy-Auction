@@ -9,9 +9,10 @@ class User(Base):
     full_name = Column(String, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    rating = relationship("Rating")
     is_active = Column(Boolean, default=True)
 
+    images = relationship("Image")
+    rating = relationship("Rating")
     comments = relationship('Comment', back_populates='owner')
     products = relationship('Product', back_populates='owner')
 
