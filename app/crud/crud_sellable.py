@@ -4,6 +4,7 @@ from fastapi.encoders import jsonable_encoder
 
 from app.models.sell import Sellable
 from app.models.product import Product
+from app.models.user import User
 from app.schemas.sellable import SellableCreate, SellableUpdate
 from app.schemas.product import ProductCreate
 from app.crud.base import CRUDBase

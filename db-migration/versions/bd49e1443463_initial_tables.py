@@ -1,8 +1,8 @@
 """Initial tables
 
-Revision ID: a3d8b5c3a743
+Revision ID: bd49e1443463
 Revises: 
-Create Date: 2021-04-13 20:17:11.114769
+Create Date: 2021-04-15 09:40:29.791800
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a3d8b5c3a743'
+revision = 'bd49e1443463'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -46,11 +46,14 @@ def upgrade():
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('product_condition', sa.String(), nullable=True),
+    sa.Column('sold', sa.Boolean(), nullable=True),
+    sa.Column('product_type', sa.Enum('AUCTIONABLE', 'SELLABLE', 'BOTH', name='producttype'), nullable=False),
     sa.Column('usr_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['usr_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_product_id'), 'product', ['id'], unique=False)
+    op.create_index(op.f('ix_product_product_type'), 'product', ['product_type'], unique=False)
     op.create_table('rating',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('rating', sa.Float(), nullable=True),
@@ -100,7 +103,6 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('price', sa.Float(), nullable=True),
     sa.Column('discount', sa.Float(), nullable=True),
-    sa.Column('quantity', sa.Integer(), nullable=True),
     sa.Column('prod_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['prod_id'], ['product.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -141,6 +143,7 @@ def downgrade():
     op.drop_table('auctionable')
     op.drop_index(op.f('ix_rating_id'), table_name='rating')
     op.drop_table('rating')
+    op.drop_index(op.f('ix_product_product_type'), table_name='product')
     op.drop_index(op.f('ix_product_id'), table_name='product')
     op.drop_table('product')
     op.drop_index(op.f('ix_user_id'), table_name='user')

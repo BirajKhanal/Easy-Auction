@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.schemas import auction, product, category
 from app.crud import crud_product, crud_auctionable
 from app.api.dependencies import get_db, get_current_active_user
+from app.models.product import ProductType
 
 router = APIRouter()
 
@@ -17,7 +18,7 @@ def create_auctionable(
         db: Session = Depends(get_db)):
 
     new_product = crud_product.product.create_with_owner(
-        db=db, obj_in=product_in, usr_id=current_user.id)
+        db=db, obj_in=product_in, usr_id=current_user.id, product_type=ProductType.AUCTIONABLE)
     return crud_auctionable.auctionable.create_with_product(
         db=db, obj_in=auctionable_in, product=new_product)
 

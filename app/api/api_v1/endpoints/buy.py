@@ -1,7 +1,6 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, Depends, status, Body
 from sqlalchemy.orm import Session
-from fastapi.encoders import jsonable_encoder
 
 from app.schemas import sellable, product
 from app.crud import crud_product, crud_sellable
@@ -11,16 +10,26 @@ router = APIRouter()
 
 
 @router.post("/", response_model=sellable.Sellable)
-def create_sellable(
-        product_in: product.ProductCreate,
-        sellable_in: sellable.SellableCreate,
+def buy_sellable(
+        sellable_id: int,
         current_user=Depends(get_current_active_user),
         db: Session = Depends(get_db)):
 
-    new_product = crud_product.product.create_with_owner(
-        db=db, obj_in=product_in, usr_id=current_user.id)
-    return crud_sellable.sellable.create_with_product(
-        db=db, obj_in=sellable_in, product=new_product)
+    sellable_item = crud_sellable.sellable.get(
+        db=db, id=sellable_id)
+
+    update_sellable = sellable.SellableUpdate(**sellable_item)
+    update_sellable.sold = True
+    update_sellable.buyer = current_user
+
+    if not sellable_item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="No Sellable With That ID Found")
+    if sellable_item.sold:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Product Already Bought")
+
+    return crud_sellable.sellable.update(db=db, db_obj=sellable, obj_in=update_sellable)
 
 
 @router.post("/make", response_model=sellable.Sellable)

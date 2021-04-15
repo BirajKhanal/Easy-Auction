@@ -30,13 +30,11 @@ class AuctionBase(BaseModel):
     duration: Optional[float]
     start_timestamp: Optional[datetime]
     current_bid: Optional[float]
-    prod_auc_id: Optional[int]
 
 
 class AuctionCreate(AuctionBase):
     duration: float
     start_timestamp: datetime
-    prod_auc_id: int
 
 
 class AuctionUpdate(AuctionBase):
@@ -45,6 +43,7 @@ class AuctionUpdate(AuctionBase):
 
 class Auction(AuctionBase):
     id: Optional[int]
+    auctionable: Auctionable
 
     class Config:
         orm_mode = True

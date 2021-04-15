@@ -1,5 +1,6 @@
 from typing import List
 from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
 
 from app.models.product import Category
 from app.schemas.category import CategoryCreate, CategoryUpdate
@@ -14,7 +15,11 @@ class CRUDCategory(CRUDBase[Category, CategoryCreate, CategoryUpdate]):
         cat_list: List[Category] = []
         for item in categories:
             # TODO: if frontend sends category_id change this and schema too
-            cat_list.append(self.get_with_name(db=db, name=item))
+            cat_item = self.get_with_name(db=db, name=item)
+            if cat_item is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail=f"Category {item} Not Available")
+            cat_list.append(cat_item)
         return cat_list
 
 

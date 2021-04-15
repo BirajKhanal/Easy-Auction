@@ -1,8 +1,8 @@
 from typing import List, Optional
 
 from pydantic import BaseModel, HttpUrl
-from app.schemas.user import User
 from app.schemas.category import Category
+from app.models.product import ProductType
 
 
 class ProductBase(BaseModel):
@@ -17,12 +17,14 @@ class ProductCreate(ProductBase):
 
 
 class ProductUpdate(ProductBase):
-    pass
+    sold: Optional[bool]
 
 
 class Product(ProductBase):
     id: Optional[int]
     categories: Optional[List[Category]]
+    sold: bool
+    product_type: ProductType
 
     class Config:
         orm_mode = True
