@@ -15,6 +15,7 @@ class User(Base):
     rating = relationship("Rating")
     comments = relationship('Comment', back_populates='owner')
     products = relationship('Product', back_populates='owner')
+    cart = relationship('Cart', back_populates='owner')
 
 
 class Rating(Base):

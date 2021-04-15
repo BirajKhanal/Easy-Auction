@@ -3,8 +3,8 @@ from fastapi import APIRouter, HTTPException, Depends, status, Body
 from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
 
-from app.schemas import sellable, product
-from app.crud import crud_product, crud_sellable
+from app.schemas import sellable, product, cart
+from app.crud import crud_product, crud_sellable, crud_cart
 from app.api.dependencies import get_db, get_current_active_user
 
 router = APIRouter()
@@ -23,6 +23,18 @@ def create_sellable(
         db=db, obj_in=sellable_in, product=new_product)
 
 
+@router.get("/", response_model=List[sellable.Sellable])
+def get_sellable(
+    skip: int = 0,
+    limit: int = 5,
+    db: Session = Depends(get_db)
+):
+    sellable = crud_sellable.sellable.get_multi(
+        db=db, skip=skip, limit=limit
+    )
+    return sellable
+
+
 @router.post("/make", response_model=sellable.Sellable)
 def make_product_sellable(
     sellable_in: sellable.SellableCreate,
@@ -38,16 +50,20 @@ def make_product_sellable(
         db=db, obj_in=sellable_in, product=product)
 
 
-@router.get("/", response_model=List[sellable.Sellable])
-def get_sellable(
-    skip: int = 0,
-    limit: int = 5,
+@router.get('/cart/me', response_model=cart.Cart)
+def get_user_cart(
+        current_user=Depends(get_current_active_user),
+        db: Session = Depends(get_db)):
+    return crud_cart.cart.get_by_user(db=db, user=current_user)
+
+
+@router.post('/add_to_cart', response_model=cart.Cart)
+def add_to_cart(
+    sellable_id: int,
+    current_user=Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    sellable = crud_sellable.sellable.get_multi(
-        db=db, skip=skip, limit=limit
-    )
-    return sellable
+    return crud_cart.cart.add_to_cart_by_user(db=db, sellable_id=sellable_id, user=current_user)
 
 
 @router.get("/user/{usr_id}", response_model=List[sellable.Sellable])

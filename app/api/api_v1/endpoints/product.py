@@ -53,7 +53,7 @@ def read_products(
 
 
 @router.post("/buy", response_model=product.Product)
-def buy_sellable(
+def buy_sellable_product(
         product_id: int,
         current_user=Depends(get_current_active_user),
         db: Session = Depends(get_db)):

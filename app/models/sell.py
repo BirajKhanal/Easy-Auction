@@ -25,7 +25,8 @@ class Sellable(Base):
 
 class Cart(Base):
     id = Column(Integer, primary_key=True, index=True)
-    quantity = Column(Integer)
+    usr_id = Column(Integer, ForeignKey('user.id'),)
 
     sellables = relationship("Sellable",
                              secondary=cart_sellable)
+    owner = relationship("User", back_populates='cart')

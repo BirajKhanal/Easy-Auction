@@ -6,18 +6,19 @@ from app.schemas.sellable import Sellable
 
 
 class CartBase(BaseModel):
-    quantity: Optional[int]
     sellables: Optional[List[Sellable]]
+    owner: Optional[User]
 
 
 class CartCreate(CartBase):
+    pass
 
 
 class CartUpdate(CartBase):
     pass
 
 
-class CartInDB(CartBase):
+class Cart(CartBase):
     id: Optional[int]
 
     class Config:
