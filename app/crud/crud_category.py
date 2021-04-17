@@ -8,7 +8,7 @@ from app.crud.base import CRUDBase
 
 
 class CRUDCategory(CRUDBase[Category, CategoryCreate, CategoryUpdate]):
-    def get_with_name(self, db: Session, name: str):
+    def get_with_name(self, db: Session, name: str) -> Category:
         return db.query(self.model).filter(self.model.name == name).first()
 
     def get_multi_categories(self, db: Session, categories: List[str]) -> List[Category]:

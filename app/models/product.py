@@ -61,10 +61,8 @@ class Product(Base):
     owner = relationship("User", back_populates='products')
     inventory = relationship(
         'Inventory', back_populates='product')
-    comments = relationship(
-        "Comment", secondary=product_comment, back_populates="product")
-    images = relationship("Image", secondary=product_image,
-                          back_populates="product")
+    comments = relationship("Comment", secondary=product_comment)
+    images = relationship("Image", secondary=product_image)
     categories = relationship(
         "Category", secondary=product_category, back_populates="products")
 

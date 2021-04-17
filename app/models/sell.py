@@ -7,6 +7,7 @@ from app.models.product import Product
 from app.models.user import User
 
 
+# stores available discounts
 class Discount(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
@@ -16,6 +17,7 @@ class Discount(Base):
     modified_at = Column(DateTime)
 
 
+# stores the info for product that can be sold
 class Sellable(Base):
     id = Column(Integer, primary_key=True, index=True)
     price = Column(Float)
@@ -34,7 +36,7 @@ class ShoppingSession(Base):
     modified_at = Column(DateTime)
 
     owner = relationship('User', back_populates='shopping_session')
-    cart = relationship('Cart', back_populates='shopping_session')
+    cart = relationship('CartItem', back_populates='shopping_session')
 
 
 class CartItem(Base):
@@ -47,4 +49,3 @@ class CartItem(Base):
 
     sellables = relationship("Sellable")
     shopping_session = relationship("ShoppingSession", back_populates='cart')
-    owner = relationship("User", back_populates='cart')

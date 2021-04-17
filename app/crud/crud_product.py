@@ -1,26 +1,44 @@
 from typing import List
+from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
 
 from app.models.product import Product, ProductType
 from app.models.user import User
-from app.schemas.product import ProductCreate, ProductUpdate
+from app.schemas.product import ProductCreate, ProductUpdate, InventoryCreate
 from app.crud.base import CRUDBase
-from app.crud import crud_category
+from app import crud
 
 
 class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
-    def create_with_owner(self, db: Session, obj_in: ProductCreate, usr_id: int, product_type: ProductType) -> Product:
+    def create_with_owner(
+        self,
+        db: Session,
+        obj_in: ProductCreate,
+        usr_id: int,
+        product_type: ProductType,
+        quantity: int
+    ) -> Product:
         obj_in_data = jsonable_encoder(obj_in)
-        if obj_in.categories:
-            prod_categories = crud_category.category.get_multi_categories(
-                db, categories=obj_in.categories)
+        if obj_in_data.get('categories', None):
+            prod_categories = crud.category.get_multi_categories(
+                db, categories=obj_in_data['categories'])
             obj_in_data["categories"] = prod_categories
         else:
-            # remove categories from dict before setting in db
-            del obj_in_data["categories"]
-        db_obj = self.model(**obj_in_data, usr_id=usr_id,
-                            product_type=product_type)
+            del obj_in_data['categories']
+        # TODO: set inventory quantity default to 1 or value of quantity: int
+        inventory_obj = InventoryCreate(
+            quantity=quantity)
+        inventory = crud.inventory.create(
+            db=db, obj_in=inventory_obj, restocked_at=datetime.now())
+        db_obj = self.model(
+            **obj_in_data,
+            usr_id=usr_id,
+            product_type=product_type,
+            inventory=inventory,
+            created_at=datetime.now(),
+            modified_at=datetime.now()
+        )
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -37,7 +55,7 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
             .all()
         )
 
-    def buy_product(self, db: Session, db_obj: Product, buyer: User):
+    def buy_product(self, db: Session, db_obj: Product, buyer: User) -> Product:
         db_obj.sold = True
         # TODO: Do something to tell who bought the item maybe another table?
         db.add(db_obj)

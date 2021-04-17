@@ -4,42 +4,45 @@ from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
 
 from app.schemas import product, category, auction, sellable
-from app.crud import crud_product, crud_category, crud_sellable, crud_auctionable
+from app import crud
 from app.api.dependencies import get_db, get_current_active_user
 from app.models.product import ProductType
 
 router = APIRouter()
 
 
-@router.post("/", response_model=product.Product)
+@router.post("/", response_model=product.ProductResponse, response_model_exclude_unset=True)
 def create_product(
-        product_in: product.ProductCreate,
-        auctionable_in: auction.AuctionableCreate,
-        sellable_in: sellable.SellableCreate,
+        product_in: product.ProductCreateRequest,
         product_type: ProductType,
         current_user=Depends(get_current_active_user),
         db: Session = Depends(get_db)):
-    product_db = crud_product.product.create_with_owner(
-        db=db, obj_in=product_in, usr_id=current_user.id, product_type=product_type)
-    if product_type == ProductType.SELLABLE:
-        sellable_product = crud_sellable.sellable.create_with_product(
-            db=db, obj_in=sellable_in, product=product_db
-        )
 
-    elif product_type == ProductType.AUCTIONABLE:
-        auctionable_product = crud_auctionable.auctionable.create_with_product(
-            db=db, obj_in=auctionable_in, product=product_db
+    product_in: dict = product_in.dict()
+    product_obj = product.ProductCreate(**product_in)
+    product_db = crud.product.create_with_owner(
+        db=db,
+        obj_in=product_obj,
+        usr_id=current_user.id,
+        product_type=product_type,
+        quantity=product_in.get('quantity', 1)
+    )
+    prod_obj = jsonable_encoder(product_db)
+    if product_type in [ProductType.SELLABLE, ProductType.BOTH]:
+        sellable_obj = sellable.SellableCreate(**product_in)
+        sellable_product = crud.sellable.create_with_product(
+            db=db, obj_in=sellable_obj, product_id=product_db.id
         )
+        prod_obj = {**prod_obj, **jsonable_encoder(sellable_product)}
 
-    else:
-        sellable_product = crud_sellable.sellable.create_with_product(
-            db=db, obj_in=sellable_in, product=product_db
+    if product_type in [ProductType.AUCTIONABLE, ProductType.BOTH]:
+        auction_obj = auction.AuctionableCreate(**product_in)
+        auctionable_product = crud.auctionable.create_with_product(
+            db=db, obj_in=auction_obj, product_id=product_db.id
         )
-        auctionable_product = crud_auctionable.auctionable.create_with_product(
-            db=db, obj_in=auctionable_in, product=product_db
-        )
+        prod_obj = {**prod_obj, **jsonable_encoder(auctionable_product)}
 
-    return product_db
+    return product.ProductResponse(**prod_obj, categories=product_db.categories, inventory=product_db.inventory)
 
 
 @router.get("/", response_model=List[product.Product])
@@ -47,7 +50,7 @@ def read_products(
         skip: int = 0,
         limit: int = 5,
         db: Session = Depends(get_db)):
-    products = crud_product.product.get_multi(
+    products = crud.product.get_multi(
         db=db, skip=skip, limit=limit)
     return products
 

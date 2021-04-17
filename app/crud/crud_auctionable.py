@@ -10,9 +10,9 @@ from app.crud.base import CRUDBase
 
 
 class CRUDAuctionable(CRUDBase[Auctionable, AuctionableCreate, AuctionableUpdate]):
-    def create_with_product(self, db: Session, obj_in: AuctionableCreate, product: ProductCreate) -> Auctionable:
+    def create_with_product(self, db: Session, obj_in: AuctionableCreate, product_id: int) -> Auctionable:
         obj_in_data = jsonable_encoder(obj_in)
-        db_obj = self.model(**obj_in_data, product=product)
+        db_obj = self.model(**obj_in_data, prod_id=product_id)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

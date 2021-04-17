@@ -11,9 +11,9 @@ from app.crud.base import CRUDBase
 
 
 class CRUDSellable(CRUDBase[Sellable, SellableCreate, SellableUpdate]):
-    def create_with_product(self, db: Session, obj_in: SellableCreate, product: ProductCreate) -> Sellable:
+    def create_with_product(self, db: Session, obj_in: SellableCreate, product_id: int) -> Sellable:
         obj_in_data = jsonable_encoder(obj_in)
-        db_obj = self.model(**obj_in_data, product=product)
+        db_obj = self.model(**obj_in_data, prod_id=product_id)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

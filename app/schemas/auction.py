@@ -1,7 +1,6 @@
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel
-from app.schemas.product import Product
 
 
 class AuctionableBase(BaseModel):
@@ -20,7 +19,6 @@ class AuctionableUpdate(AuctionableBase):
 
 class Auctionable(AuctionableBase):
     id: Optional[int]
-    product: Product
 
     class Config:
         orm_mode = True
