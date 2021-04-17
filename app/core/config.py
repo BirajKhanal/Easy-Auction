@@ -72,7 +72,9 @@ class Settings(BaseSettings):
     #         and values.get("EMAILS_FROM_EMAIL")
     #     )
 
-    # EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
+    EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
+    FIRST_TEST_USER_EMAIL: EmailStr = "apple@ball.com"
+    FIRST_TEST_USER_PASSWORD: str = "apple123"
 
     class Config:
         case_sensitive = True
