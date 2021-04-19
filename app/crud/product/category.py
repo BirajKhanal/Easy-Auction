@@ -11,14 +11,10 @@ class CRUDCategory(CRUDBase[Category, CategoryCreate, CategoryUpdate]):
     def get_with_name(self, db: Session, name: str) -> Category:
         return db.query(self.model).filter(self.model.name == name).first()
 
-    def get_multi_categories(self, db: Session, categories: List[str]) -> List[Category]:
+    def get_multi_by_ids(self, db: Session, category_ids: List[int]) -> List[Category]:
         cat_list: List[Category] = []
-        for item in categories:
-            # TODO: if frontend sends category_id change this and schema too
-            cat_item = self.get_with_name(db=db, name=item)
-            if cat_item is None:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                    detail=f"Category {item} Not Available")
+        for category_id in category_ids:
+            cat_item = self.get(db=db, id=category_id)
             cat_list.append(cat_item)
         return cat_list
 

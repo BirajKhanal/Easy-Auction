@@ -54,4 +54,4 @@ class Auctionable(Base):
     auction_state = Column(String)
     prod_id = Column(Integer, ForeignKey('product.id'))
 
-    product = relationship("Product")
+    product = relationship("Product", back_populates='auctionable')
