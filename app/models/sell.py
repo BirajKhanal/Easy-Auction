@@ -24,7 +24,7 @@ class Sellable(Base):
     prod_id = Column(Integer, ForeignKey('product.id'))
     discount_id = Column(Integer, ForeignKey('discount.id'))
 
-    product = relationship("Product")
+    product = relationship("Product", back_populates='sellable')
     discount = relationship('Discount')
 
 

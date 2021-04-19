@@ -3,8 +3,9 @@ from fastapi import APIRouter, HTTPException, Depends, status, Body
 from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
 
-from app.schemas import sellable, product, cart
-from app.crud import crud_product, crud_sellable, crud_cart
+from app.schemas import sellable, product
+from app.crud.product import product as crud_product
+from app.crud.sell import sellable as crud_sellable
 from app.api.dependencies import get_db, get_current_active_user
 
 router = APIRouter()
@@ -48,22 +49,6 @@ def make_product_sellable(
                             detail="No Product With That ID Exists")
     return crud_sellable.sellable.create_with_product(
         db=db, obj_in=sellable_in, product=product)
-
-
-@router.get('/cart/me', response_model=cart.Cart)
-def get_user_cart(
-        current_user=Depends(get_current_active_user),
-        db: Session = Depends(get_db)):
-    return crud_cart.cart.get_by_user(db=db, user=current_user)
-
-
-@router.post('/add_to_cart', response_model=cart.Cart)
-def add_to_cart(
-    sellable_id: int,
-    current_user=Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    return crud_cart.cart.add_to_cart_by_user(db=db, sellable_id=sellable_id, user=current_user)
 
 
 @router.get("/user/{usr_id}", response_model=List[sellable.Sellable])

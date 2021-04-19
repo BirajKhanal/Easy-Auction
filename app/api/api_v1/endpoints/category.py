@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
 from app.schemas import category
-from app.crud import crud_category
+from app.crud import product as crud_product
 from app.api.dependencies import get_db
 
 router = APIRouter()
@@ -13,7 +13,7 @@ router = APIRouter()
 def create_category(
         category_in: category.CategoryCreate,
         db: Session = Depends(get_db)):
-    get_category = crud_category.category.get_with_name(db, category_in.name)
+    get_category = crud_product.category.get_with_name(db, category_in.name)
     if get_category:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Category Already Exists")

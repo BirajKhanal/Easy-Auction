@@ -1,8 +1,8 @@
 """Initial tables
 
-Revision ID: e076d31a866d
+Revision ID: 6cdec7bd0fe0
 Revises: 
-Create Date: 2021-04-16 19:51:09.095639
+Create Date: 2021-04-19 11:37:43.099621
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'e076d31a866d'
+revision = '6cdec7bd0fe0'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -90,7 +90,6 @@ def upgrade():
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('product_condition', sa.Enum('BRAND_NEW', 'BEST', 'GOOD', 'BAD', name='productcondition'), nullable=True),
-    sa.Column('product_type', sa.Enum('AUCTIONABLE', 'SELLABLE', 'BOTH', name='producttype'), nullable=False),
     sa.Column('inventory_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('modified_at', sa.DateTime(), nullable=True),
@@ -100,7 +99,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_product_id'), 'product', ['id'], unique=False)
-    op.create_index(op.f('ix_product_product_type'), 'product', ['product_type'], unique=False)
     op.create_table('rating',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('rating', sa.Float(), nullable=True),
@@ -232,7 +230,6 @@ def downgrade():
     op.drop_table('shoppingsession')
     op.drop_index(op.f('ix_rating_id'), table_name='rating')
     op.drop_table('rating')
-    op.drop_index(op.f('ix_product_product_type'), table_name='product')
     op.drop_index(op.f('ix_product_id'), table_name='product')
     op.drop_table('product')
     op.drop_index(op.f('ix_image_id'), table_name='image')

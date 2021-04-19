@@ -8,16 +8,6 @@ from app.models.user import User
 from app.models.comment import Comment
 
 
-# type of available service
-# 1. product for auction
-# 2. product for selling/buying
-# TODO: 3. product for trading
-class ProductType(str, enum.Enum):
-    AUCTIONABLE = 'AUCTIONABLE'
-    SELLABLE = 'SELLABLE'
-    BOTH = 'BOTH'
-
-
 class ProductCondition(str, enum.Enum):
     # TODO: Put some creative name
     BRAND_NEW = 'BRANDNEW'
@@ -51,13 +41,14 @@ class Product(Base):
     name = Column(String)
     description = Column(String)
     product_condition = Column(Enum(ProductCondition))
-    product_type = Column(Enum(ProductType), nullable=False, index=True)
     inventory_id = Column(Integer, ForeignKey('inventory.id'))
     created_at = Column(DateTime)
     modified_at = Column(DateTime)
 
     usr_id = Column(Integer, ForeignKey('user.id'))
 
+    auctionable = relationship("Auctionable", back_populates='product')
+    sellable = relationship("Sellable", back_populates='product')
     owner = relationship("User", back_populates='products')
     inventory = relationship(
         'Inventory', back_populates='product')

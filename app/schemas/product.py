@@ -3,9 +3,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, HttpUrl
 from app.schemas.category import Category
-from app.schemas.sellable import SellableBase
-from app.schemas.auction import AuctionableBase
-from app.models.product import ProductType
+from app.schemas import auction, sellable, category
+from app.models.product import ProductCondition
 
 
 class InventoryBase(BaseModel):
@@ -28,8 +27,9 @@ class Inventory(InventoryBase):
 class ProductBase(BaseModel):
     name: Optional[str]
     description: Optional[str] = None
-    product_condition: Optional[str]
-    categories: Optional[List[str]]
+    product_condition: Optional[ProductCondition]
+    categories: Optional[List[category.CategoryBase]]
+    inventory: Optional[InventoryBase]
 
 
 class ProductCreate(ProductBase):
@@ -37,25 +37,13 @@ class ProductCreate(ProductBase):
 
 
 class ProductUpdate(ProductBase):
-    sold: Optional[bool]
+    pass
 
 
 class Product(ProductBase):
     id: Optional[int]
     categories: Optional[List[Category]]
-    product_type: ProductType
     inventory: Optional[Inventory]
 
     class Config:
         orm_mode = True
-
-
-class ProductCreateRequest(ProductCreate):
-    bid_cap: Optional[float]
-    starting_bid: Optional[float]
-    price: Optional[float]
-    quantity: Optional[int]
-
-
-class ProductResponse(Product, SellableBase, AuctionableBase):
-    pass
