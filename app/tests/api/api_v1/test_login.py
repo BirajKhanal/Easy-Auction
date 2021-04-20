@@ -1,14 +1,22 @@
 from typing import Dict
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.schemas.user import UserCreate
+from app.crud import user as crud_user
+from app.tests.utils.utils import random_email, random_lower_string
 
 
-def test_get_access_token(client: TestClient) -> None:
+def test_get_access_token(client: TestClient, db: Session) -> None:
+    username = random_email()
+    password = random_lower_string()
+    user_in = UserCreate(email=username, password=password)
+    crud_user.user.create(db, obj_in=user_in)
     login_data = {
-        "username": settings.EMAIL_TEST_USER,
-        "password": settings.PASSWORD_TEST_USER,
+        "username": username,
+        "password": password
     }
     r = client.post(
         f"{settings.API_V1_STR}/auth/login/access-token", data=login_data)

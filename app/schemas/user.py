@@ -36,3 +36,42 @@ class User(UserInDBBase):
 # Additional properties stored in DB
 class UserInDB(UserInDBBase):
     hashed_password: str
+
+
+# user details schemas
+
+class UserDetailBase(BaseModel):
+    pass
+
+
+class UserDetailCreate(UserDetailBase):
+    pass
+
+
+class UserDetailUpdate(UserDetailBase):
+    pass
+
+
+class UserDetail(UserDetailBase):
+    class Config:
+        orm_mode = True
+
+
+# rating schemas
+
+
+class RatingBase(BaseModel):
+    pass
+
+
+class RatingCreate(RatingBase):
+    pass
+
+
+class RatingUpdate(RatingBase):
+    pass
+
+
+class Rating(RatingBase):
+    class Config:
+        orm_mode = True

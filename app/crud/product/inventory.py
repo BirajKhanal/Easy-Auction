@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
+from fastapi.encoders import jsonable_encoder
+
 from app.models.product import Inventory
 from app.schemas.product import InventoryCreate, InventoryUpdate
 from app.crud.base import CRUDBase

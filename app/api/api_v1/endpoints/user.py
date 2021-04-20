@@ -1,11 +1,12 @@
 from typing import Any, List
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
 
-from app import crud, models, schemas
+from app import models, schemas
+from app.crud import user as crud_user
 from app.api import dependencies
 from app.core.config import settings
 
@@ -33,7 +34,7 @@ def update_user_me(
         user_in.full_name = full_name
     if email is not None:
         user_in.email = email
-    user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
+    user = crud_user.user.update(db, db_obj=current_user, obj_in=user_in)
     return user
 
 
@@ -60,7 +61,7 @@ def register_user(
     """
     Create new user without the need to be logged in.
     """
-    user = crud.user.get_by_email(db, email=email)
+    user = crud_user.user.get_by_email(db, email=email)
     if user:
         raise HTTPException(
             status_code=400,
@@ -68,7 +69,21 @@ def register_user(
         )
     user_in = schemas.UserCreate(
         password=password, email=email, full_name=full_name)
-    user = crud.user.create(db, obj_in=user_in)
+    user = crud_user.user.create(db, obj_in=user_in)
+    return user
+
+
+@router.get("/{usr_id}", response_model=schemas.User)
+def get_user(
+    usr_id: int,
+    db: Session = Depends(dependencies.get_db)
+):
+    user = crud_user.user.get(db=db, id=usr_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="user not found"
+        )
     return user
 
 
@@ -83,5 +98,5 @@ def read_users(
     """
     Retrieve users.
     """
-    users = crud.user.get_multi(db, skip=skip, limit=limit)
+    users = crud_user.user.get_multi(db, skip=skip, limit=limit)
     return users

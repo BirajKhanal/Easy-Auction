@@ -2,6 +2,8 @@ from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel
 
+from app.schemas.product import Product
+
 
 # auctionalbe schemas
 
@@ -21,31 +23,7 @@ class AuctionableUpdate(AuctionableBase):
 
 class Auctionable(AuctionableBase):
     id: Optional[int]
-
-    class Config:
-        orm_mode = True
-
-
-# auction schemas
-
-class AuctionBase(BaseModel):
-    duration: Optional[float]
-    start_timestamp: Optional[datetime]
-    current_bid: Optional[float]
-
-
-class AuctionCreate(AuctionBase):
-    duration: float
-    start_timestamp: datetime
-
-
-class AuctionUpdate(AuctionBase):
-    pass
-
-
-class Auction(AuctionBase):
-    id: Optional[int]
-    auctionable: Auctionable
+    product: Product
 
     class Config:
         orm_mode = True
@@ -54,15 +32,16 @@ class Auction(AuctionBase):
 # auction session schemas
 
 class AuctionSessionBase(BaseModel):
-    pass
+    minimum_bid_amount: Optional[float]
 
 
 class AuctionSessionCreate(AuctionSessionBase):
-    pass
+    minimum_bid_amount: float
 
 
 class AuctionSessionUpdate(AuctionSessionBase):
-    pass
+    winning_bid: int
+    auction_state: str
 
 
 class AuctionSession(AuctionSessionBase):
@@ -73,11 +52,11 @@ class AuctionSession(AuctionSessionBase):
 # bid schemas
 
 class BidBase(BaseModel):
-    pass
+    bid_amount: Optional[float]
 
 
 class BidCreate(BidBase):
-    pass
+    bid_amount: float
 
 
 class BidUpdate(BidBase):
@@ -85,5 +64,27 @@ class BidUpdate(BidBase):
 
 
 class Bid(BidBase):
+    class Config:
+        orm_mode = True
+
+# auction schemas
+
+
+class AuctionBase(BaseModel):
+    name: Optional[str]
+
+
+class AuctionCreate(AuctionBase):
+    pass
+
+
+class AuctionUpdate(AuctionBase):
+    pass
+
+
+class Auction(AuctionBase):
+    id: Optional[int]
+    auctionable: Auctionable
+
     class Config:
         orm_mode = True

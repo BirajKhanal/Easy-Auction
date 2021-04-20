@@ -9,11 +9,10 @@ from app.models.comment import Comment
 
 
 class ProductCondition(str, enum.Enum):
-    # TODO: Put some creative name
-    BRAND_NEW = 'BRANDNEW'
-    BEST = 'BEST'
-    GOOD = 'GOOD'
-    BAD = 'BAD'
+    BRAND_NEW = 'brandnew'
+    BEST = 'best'
+    GOOD = 'good'
+    POOR = 'poor'
 
 
 product_category = Table('product_category', Base.metadata, Column('product_id', Integer, ForeignKey('product.id')),
