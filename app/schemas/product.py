@@ -28,8 +28,6 @@ class ProductBase(BaseModel):
     name: Optional[str]
     description: Optional[str] = None
     product_condition: Optional[ProductCondition]
-    categories: Optional[List[category.CategoryBase]]
-    inventory: Optional[InventoryBase]
 
 
 class ProductCreate(ProductBase):
@@ -44,6 +42,7 @@ class Product(ProductBase):
     id: Optional[int]
     categories: Optional[List[Category]]
     inventory: Optional[Inventory]
+    usr_id: int
 
     class Config:
         orm_mode = True

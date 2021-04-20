@@ -3,15 +3,11 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
 
-from app.models.product import Product
+from app.models.product import Product, Category
 from app.models.user import User
-from app.models.auction import Auctionable
-from app.models.sell import Sellable
 from app.schemas.product import ProductCreate, ProductUpdate, InventoryCreate
-from app.schemas.auction import AuctionableCreate
-from app.schemas.sellable import SellableCreate
 from app.crud.base import CRUDBase
-from app import crud
+from app.crud.product.inventory import inventory as crud_inventory
 
 
 class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
@@ -19,13 +15,26 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
         self,
         db: Session,
         obj_in: ProductCreate,
+        categories: List[Category],
         usr_id: int,
+        quantity: int
     ) -> Product:
         obj_in_data = jsonable_encoder(obj_in)
-        db_obj = self.model(**obj_in_data, usr_id=usr_id)
+        inventory_obj = InventoryCreate(quantity=quantity)
+        inventory_db = crud_inventory.create(
+            db=db, obj_in=inventory_obj, restocked_at=datetime.now())
+        db_obj = self.model(
+            **obj_in_data,
+            categories=categories,
+            usr_id=usr_id,
+            inventory_id=inventory_db.id,
+            created_at=datetime.now(),
+            modified_at=datetime.now()
+        )
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+        return db_obj
 
     def get_multi_by_owner(
         self, db: Session, *, usr_id: int, skip: int = 0, limit: int = 100

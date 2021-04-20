@@ -37,8 +37,7 @@ class AuctionSession(Base):
 class Auction(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    # TODO: duration should be a timedelta
-    duration = Column(Float)
+    ending_at = Column(DateTime)
     created_at = Column(DateTime)
     auctionable_id = Column(Integer, ForeignKey('auctionable.id'))
     auction_session_id = Column(Integer, ForeignKey('auctionsession.id'))
