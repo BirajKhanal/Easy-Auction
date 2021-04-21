@@ -3,21 +3,18 @@ from datetime import datetime
 from sqlalchemy.orm import Session, joinedload, raiseload, contains_eager, Load
 from fastapi.encoders import jsonable_encoder
 
-from app.models.auction import Auction, Auctionable
-from app.models.product import Product, Category
-from app.schemas.auction import AuctionCreate, AuctionUpdate
+from app.models.auction import Auction, Auctionable, Bid
+from app.models.product import Product, Category, ProductCondition
+from app.schemas.auction import AuctionCreate, AuctionUpdate, BidCreate, AuctionableCreate, AuctionSessionCreate
+from app.schemas.product import ProductCreate
 from app.crud.base import CRUDBase
-from app.models.product import ProductCondition
-from app.schemas import (
-    product as schema_product,
-    auction as schema_auction
-)
 from app.crud.product import (
     product as crud_product,
     category as crud_category
 )
 from app.crud.auction.auctionable import auctionable as crud_auctionable
 from app.crud.auction.auction_session import auction_session as crud_auction_session
+from app.crud.auction.bid import bid as crud_bid
 
 
 class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
@@ -51,6 +48,7 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
         self,
         db: Session,
         obj_in: AuctionCreate,
+        owner_id: int,
         ending_at: datetime,
         auctionable_id: int,
         auction_session_id: int
@@ -59,6 +57,7 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
         db_obj = self.model(
             **obj_in_data,
             created_at=datetime.now(),
+            owner_id=owner_id,
             ending_at=ending_at,
             auctionable_id=auctionable_id,
             auction_session_id=auction_session_id
@@ -84,7 +83,7 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
         # create a product
         categories = crud_category.get_multi_by_ids(
             db=db, category_ids=categories)
-        product_obj = schema_product.ProductCreate(
+        product_obj = ProductCreate(
             name=name,
             description=description,
             product_condition=product_condition,
@@ -98,7 +97,7 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
         )
 
         # create an auctionable
-        auctionable_obj = schema_auction.AuctionableCreate(
+        auctionable_obj = AuctionableCreate(
             bid_cap=bid_cap,
             starting_bid=starting_bid,
         )
@@ -109,7 +108,9 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
         )
 
         # create an auction_session
-        auction_session_obj = schema_auction.AuctionSessionCreate(
+
+        # TODO: auction_state to STARTED
+        auction_session_obj = AuctionSessionCreate(
             minimum_bid_amount=starting_bid,
         )
         auction_session_db = crud_auction_session.create(
@@ -118,12 +119,13 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
         )
 
         # create an auction
-        auction_obj = schema_auction.AuctionCreate(
+        auction_obj = AuctionCreate(
             name=name,
         )
         auction_db = self.create_with_auctionable_and_session(
             db=db,
             obj_in=auction_obj,
+            owner_id=usr_id,
             ending_at=ending_at,
             auctionable_id=auctionable_db.id,
             auction_session_id=auction_session_db.id

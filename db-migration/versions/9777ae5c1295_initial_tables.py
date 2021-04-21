@@ -1,8 +1,8 @@
 """Initial tables
 
-Revision ID: 4d5d088a3e1e
+Revision ID: 9777ae5c1295
 Revises: 
-Create Date: 2021-04-19 13:38:56.382863
+Create Date: 2021-04-21 10:47:29.771397
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '4d5d088a3e1e'
+revision = '9777ae5c1295'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -89,7 +89,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('product_condition', sa.Enum('BRAND_NEW', 'BEST', 'GOOD', 'BAD', name='productcondition'), nullable=True),
+    sa.Column('product_condition', sa.Enum('BRAND_NEW', 'BEST', 'GOOD', 'POOR', name='productcondition'), nullable=True),
     sa.Column('inventory_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('modified_at', sa.DateTime(), nullable=True),
@@ -121,7 +121,6 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('bid_cap', sa.Float(), nullable=True),
     sa.Column('starting_bid', sa.Float(), nullable=True),
-    sa.Column('auction_state', sa.String(), nullable=True),
     sa.Column('prod_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['prod_id'], ['product.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -180,10 +179,14 @@ def upgrade():
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('ending_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('owner_id', sa.Integer(), nullable=True),
+    sa.Column('auction_winner_id', sa.Integer(), nullable=True),
     sa.Column('auctionable_id', sa.Integer(), nullable=True),
     sa.Column('auction_session_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['auction_session_id'], ['auctionsession.id'], ),
+    sa.ForeignKeyConstraint(['auction_winner_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['auctionable_id'], ['auctionable.id'], ),
+    sa.ForeignKeyConstraint(['owner_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_auction_id'), 'auction', ['id'], unique=False)

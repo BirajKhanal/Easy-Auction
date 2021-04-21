@@ -10,12 +10,13 @@ from app.crud.auction import (
 )
 from app.crud.product import product as crud_product
 from app.schemas import auction
+from app.models.auction import Auction
 from app.tests.utils.user import create_random_user
 from app.tests.utils.utils import random_lower_string, random_int, random_float
 from app.tests.utils.product import create_random_category, random_product_condition
 
 
-def create_random_auction(db: Session) -> auction.Auction:
+def create_random_auction(db: Session) -> Auction:
     name = random_lower_string()
     description = random_lower_string()
     cat1 = create_random_category(db)

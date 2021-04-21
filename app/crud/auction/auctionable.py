@@ -25,6 +25,7 @@ class CRUDAuctionable(CRUDBase[Auctionable, AuctionableCreate, AuctionableUpdate
     def get_multi_by_owner(
         self, db: Session, *, usr_id: int, skip: int = 0, limit: int = 100
     ) -> List[Auctionable]:
+        # TODO: optimize the query beceause this is nested schema
         return (
             db.query(self.model)
             .select_from(join(Product, Auctionable))

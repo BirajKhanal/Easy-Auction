@@ -39,9 +39,13 @@ class Auction(Base):
     name = Column(String)
     ending_at = Column(DateTime)
     created_at = Column(DateTime)
+    owner_id = Column(Integer, ForeignKey('user.id'))
+    auction_winner_id = Column(Integer, ForeignKey('user.id'))
     auctionable_id = Column(Integer, ForeignKey('auctionable.id'))
     auction_session_id = Column(Integer, ForeignKey('auctionsession.id'))
 
+    owner = relationship("User", foreign_keys=[owner_id])
+    auction_winner = relationship("User", foreign_keys=[auction_winner_id])
     auctionable = relationship("Auctionable")
     auction_session = relationship("AuctionSession", back_populates='auction')
 
@@ -50,7 +54,6 @@ class Auctionable(Base):
     id = Column(Integer, primary_key=True, index=True)
     bid_cap = Column(Float)
     starting_bid = Column(Float)
-    auction_state = Column(String)
     prod_id = Column(Integer, ForeignKey('product.id'))
 
     product = relationship("Product", back_populates='auctionable')

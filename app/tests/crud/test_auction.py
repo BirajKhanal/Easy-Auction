@@ -83,20 +83,35 @@ def test_bid_in_auction(
 ):
     auction = create_random_auction(db)
     bidder = create_random_user(db)
-    bid_amount = random_int()
+    bid_amount1 = random_int()
+    bid_amount2 = random_int()
+    bid_amount3 = random_int()
 
-    bid = crud_auction_session.bid_in_auction_session(
+    bid1 = crud_auction_session.bid_in_auction(
         db=db,
-        auction_session_id=auction.auction_session_id,
-        bid_amount=bid_amount,
+        id=auction.auction_session_id,
+        bid_amount=bid_amount1,
+        bidder_id=bidder.id
+    )
+    bid2 = crud_auction_session.bid_in_auction(
+        db=db,
+        id=auction.auction_session_id,
+        bid_amount=bid_amount2,
+        bidder_id=bidder.id
+    )
+    bid3 = crud_auction_session.bid_in_auction(
+        db=db,
+        id=auction.auction_session_id,
+        bid_amount=bid_amount3,
         bidder_id=bidder.id
     )
 
-    bids_in_db = crud_auction_session.get_bids(
-        db=db,
-        id=auction.auction_session_id
-    )
+    bids_in_db = auction.auction_session.bids
 
     assert bids_in_db
-    assert bids_in_db[0].id == bid.id
+    assert bids_in_db[0].id == bid1.id
     assert bids_in_db[0].usr_id == bidder.id
+    assert bids_in_db[1].id == bid2.id
+    assert bids_in_db[1].usr_id == bidder.id
+    assert bids_in_db[2].id == bid3.id
+    assert bids_in_db[2].usr_id == bidder.id

@@ -64,6 +64,9 @@ class BidUpdate(BidBase):
 
 
 class Bid(BidBase):
+    id: int
+    usr_id: int
+
     class Config:
         orm_mode = True
 

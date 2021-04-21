@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.tests.utils.utils import random_email, random_lower_string, random_float, random_int
 from app.tests.utils.product import random_product_condition, create_random_category
 from app.tests.utils.auction import create_random_auction
+from app.tests.utils.user import create_random_user
 
 
 def test_create_auction(
@@ -61,14 +62,47 @@ def test_bid_in_auction(
     assert 200 <= r.status_code < 300
     created_bid = r.json()
     print()
-    bids_in_db = crud_auction_session.get_bids(
-        db=db, id=auction.auction_session_id)
+    bids_in_db = auction.auction_session.bids
 
     assert bids_in_db
     assert bids_in_db[0].bid_amount == bid_amount
 
 
 def test_get_auction_bid(
-    db: Session
+    client: TestClient,
+    db: Session,
 ):
-    pass
+    auction = create_random_auction(db)
+    user1 = create_random_user(db)
+    user2 = create_random_user(db)
+    user3 = create_random_user(db)
+    bid1 = random_float()
+    bid2 = random_float()
+    bid3 = random_float()
+
+    bid1_in_db = crud_auction_session.bid_in_auction(
+        db=db,
+        id=auction.auction_session_id,
+        bid_amount=bid1,
+        bidder_id=user1.id
+    )
+    bid2_in_db = crud_auction_session.bid_in_auction(
+        db=db,
+        id=auction.auction_session_id,
+        bid_amount=bid2,
+        bidder_id=user2.id
+    )
+    bid3_in_db = crud_auction_session.bid_in_auction(
+        db=db,
+        id=auction.auction_session_id,
+        bid_amount=bid3,
+        bidder_id=user3.id
+    )
+
+    r = client.get(f"{settings.API_V1_STR}/auction/{auction.id}/bid")
+    assert 200 <= r.status_code < 300
+    bids_in_response = r.json()
+
+    assert bids_in_response[0]["id"] == bid1_in_db.id
+    assert bids_in_response[1]["id"] == bid2_in_db.id
+    assert bids_in_response[2]["id"] == bid3_in_db.id

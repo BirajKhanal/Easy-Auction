@@ -9,6 +9,7 @@ from app.api.dependencies import get_db, get_current_active_user
 from app.schemas.auction import Auction, Bid
 from app.crud.auction import auction as crud_auction
 from app.crud.auction import auction_session as crud_auction_session
+from app.crud.auction import bid as crud_bid
 
 router = APIRouter()
 
@@ -59,9 +60,10 @@ def bid_in_auction(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="specified auction not found"
         )
-    return crud_auction_session.bid_in_auction_session(
+    # TODO: raise exception if auction_state in ['ENDED', 'CANCELED']
+    return crud_auction_session.bid_in_auction(
         db=db,
-        auction_session_id=auction.auction_session_id,
+        id=auction.auction_session_id,
         bid_amount=bid_amount,
         bidder_id=current_user.id
     )
@@ -72,11 +74,15 @@ def get_auction_bids(
     id: int,
     skip: int = 0,
     limit: int = 5,
-    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     auction = crud_auction.get(db=db, id=id)
-    return crud_auction_session.get_bids(db=db, id=auction.auction_session_id)
+    if not auction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="auction with that id not found"
+        )
+    return crud_bid.get_multi_by_auction(db=db, auction_session_id=auction.auction_session_id, skip=skip, limit=limit)
 
 
 @router.post('/', response_model=Auction)
@@ -92,6 +98,8 @@ def create_auction(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    # TODO: validation for ending_at should be greater than today's date
+    # TODO: validation for starting_bid should be less than bid_cap
     auction_db = crud_auction.create_with_owner(
         db=db,
         name=name,
@@ -114,3 +122,8 @@ def get_auctions(
     db: Session = Depends(get_db)
 ):
     return crud_auction.get_multi(db=db, skip=skip, limit=limit)
+
+# TODO: route for canceling auction
+# TODO: route for getting auctions set by specific user
+# TODO: route for getting all  bids by specific user in specific auction
+# TODO: route for getting all bids by specific user
