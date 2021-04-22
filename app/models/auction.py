@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 from sqlalchemy import (
-    Column, ForeignKey, Integer, String, Float, DateTime, Table, Enum
+    Column, ForeignKey, Integer, String, Float, DateTime, Table, Enum, func
 )
 from sqlalchemy.orm import relationship
 
@@ -27,7 +27,8 @@ class Bid(Base):
     id = Column(Integer, primary_key=True, index=True)
     bid_amount = Column(Float)
     usr_id = Column(Integer, ForeignKey('user.id'))
-    created_at = Column(DateTime)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     owner = relationship('User')
     auction_session = relationship(
@@ -69,11 +70,12 @@ class Auction(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    created_at = Column(DateTime)
     owner_id = Column(Integer, ForeignKey('user.id'))
     auction_winner_id = Column(Integer, ForeignKey('user.id'))
     auctionable_id = Column(Integer, ForeignKey('auctionable.id'))
     auction_session_id = Column(Integer, ForeignKey('auctionsession.id'))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     owner = relationship("User", foreign_keys=[owner_id])
     auction_winner = relationship("User", foreign_keys=[auction_winner_id])

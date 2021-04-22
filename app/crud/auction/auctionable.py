@@ -8,7 +8,8 @@ from app.schemas.auction import AuctionableCreate, AuctionableUpdate
 from app.crud.base import CRUDBase
 
 
-class CRUDAuctionable(CRUDBase[Auctionable, AuctionableCreate, AuctionableUpdate]):
+class CRUDAuctionable(
+        CRUDBase[Auctionable, AuctionableCreate, AuctionableUpdate]):
     def create_with_product(
             self,
             db: Session,
@@ -25,14 +26,10 @@ class CRUDAuctionable(CRUDBase[Auctionable, AuctionableCreate, AuctionableUpdate
         self, db: Session, *, usr_id: int, skip: int = 0, limit: int = 100
     ) -> List[Auctionable]:
         # TODO: optimize the query beceause this is nested schema
-        return (
-            db.query(self.model)
-            .select_from(join(Product, Auctionable))
-            .filter(Product.usr_id == usr_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+        return db.query(
+            self.model).join(
+            self.model.product).filter(
+            Product.usr_id == usr_id).offset(skip).limit(limit).all()
 
 
 auctionable = CRUDAuctionable(Auctionable)

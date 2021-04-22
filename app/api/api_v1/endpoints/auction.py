@@ -63,7 +63,7 @@ def bid_in_auction(
         )
 
     # check if auction ended or canceled
-    current_auction_session = crud_auction_session.get(db, id=auction.id)
+    current_auction_session = auction.auction_session
 
     if current_auction_session.auction_state in [
             AuctionState.ENDED, AuctionState.CANCELED]:
@@ -123,7 +123,7 @@ def create_auction(
             detail="starting bid should be greater than bid cap"
         )
 
-    if ending_at < datetime.now():
+    if ending_at <= datetime.now():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="ending date should be greater than today's date"

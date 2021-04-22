@@ -113,7 +113,7 @@ def test_bid_in_already_finished_auction(
         normal_user_token_headers: Dict[str, str]
 
 ) -> None:
-    ending_at = datetime.now() + timedelta(seconds=2)
+    ending_at = datetime.now() + timedelta(seconds=1)
     bid_amount = random_float()
     auction = create_random_auction(db, ending_at=ending_at)
     time.sleep(3)

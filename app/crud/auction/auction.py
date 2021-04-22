@@ -1,11 +1,11 @@
 from typing import List
 from datetime import datetime
-from sqlalchemy.orm import Session, selectinload, raiseload, Load
+from sqlalchemy.orm import Session, selectinload, raiseload
 from fastapi.encoders import jsonable_encoder
 
-from app.models.auction import Auction, Auctionable, Bid, AuctionState
-from app.models.product import Product, Category, ProductCondition
-from app.schemas.auction import AuctionCreate, AuctionUpdate, BidCreate, AuctionableCreate, AuctionSessionCreate
+from app.models.auction import Auction, Auctionable, AuctionState
+from app.models.product import Product, ProductCondition
+from app.schemas.auction import AuctionCreate, AuctionUpdate, AuctionableCreate, AuctionSessionCreate
 from app.schemas.product import ProductCreate
 from app.crud.base import CRUDBase
 from app.crud.product import (
@@ -27,9 +27,10 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
             selectinload(Auction.auctionable)
             .selectinload(Auctionable.product)
             .selectinload(Product.categories),
+            selectinload(Auction.auction_session),
             raiseload('*')
         )
-        return query.filter(self.model.id == id).first()
+        return query.get(id)
 
     # TODO: use selectinload
     def get_multi(self, db: Session, skip: int = 0, limit: int = 1000):
@@ -55,7 +56,6 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(
             **obj_in_data,
-            created_at=datetime.now(),
             owner_id=owner_id,
             auctionable_id=auctionable_id,
             auction_session_id=auction_session_id

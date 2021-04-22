@@ -1,8 +1,8 @@
 """Initial tables
 
-Revision ID: 6abfb001cf51
+Revision ID: 40fed8c8f962
 Revises: 
-Create Date: 2021-04-22 16:26:01.994662
+Create Date: 2021-04-22 22:54:51.170921
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '6abfb001cf51'
+revision = '40fed8c8f962'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -58,7 +58,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('bid_amount', sa.Float(), nullable=True),
     sa.Column('usr_id', sa.Integer(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.ForeignKeyConstraint(['usr_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -178,11 +179,12 @@ def upgrade():
     op.create_table('auction',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('owner_id', sa.Integer(), nullable=True),
     sa.Column('auction_winner_id', sa.Integer(), nullable=True),
     sa.Column('auctionable_id', sa.Integer(), nullable=True),
     sa.Column('auction_session_id', sa.Integer(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.ForeignKeyConstraint(['auction_session_id'], ['auctionsession.id'], ),
     sa.ForeignKeyConstraint(['auction_winner_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['auctionable_id'], ['auctionable.id'], ),

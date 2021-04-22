@@ -20,7 +20,8 @@ class CRUDAuctionSession(CRUDBase[AuctionSession, AuctionSessionCreate, AuctionS
         db.refresh(db_obj)
         return db_obj
 
-    def check_if_auction_ended(self, db: Session, db_obj: AuctionSession):
+    @staticmethod
+    def check_if_auction_ended(db: Session, db_obj: AuctionSession):
         if db_obj.ending_at and db_obj.ending_at < datetime.now():
             db_obj.auction_state = AuctionState.ENDED
         db.add(db_obj)
@@ -29,9 +30,8 @@ class CRUDAuctionSession(CRUDBase[AuctionSession, AuctionSessionCreate, AuctionS
 
     def get(self, db: Session, id: int) -> AuctionSession:
         db_obj = db.query(self.model).options(
-            selectinload(self.model.auction)).filter(self.model.id == id).first()
-        self.check_if_auction_ended(db, db_obj)
-        print("Auction state: ", db_obj.auction_state)
+            selectinload(self.model.auction)).get(id)
+        CRUDAuctionSession.check_if_auction_ended(db, db_obj)
         return db_obj
 
     def bid_in_auction(
@@ -70,8 +70,6 @@ class CRUDAuctionSession(CRUDBase[AuctionSession, AuctionSessionCreate, AuctionS
             self,
             db: Session,
             id: int,
-            skip: int = 0,
-            limit: int = 1000
     ) -> List[Bid]:
         # TODO: filter by auction_session_id
         auction_session = self.get(db, id=id)

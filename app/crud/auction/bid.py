@@ -18,7 +18,6 @@ class CRUDBid(CRUDBase[Bid, BidCreate, BidUpdate]):
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(
             **obj_in_data,
-            created_at=datetime.now(),
             usr_id=usr_id)  # type: ignore
         db.add(db_obj)
         db.commit()

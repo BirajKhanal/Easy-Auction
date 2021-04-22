@@ -28,8 +28,6 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
             categories=categories,
             usr_id=usr_id,
             inventory_id=inventory_db.id,
-            created_at=datetime.now(),
-            modified_at=datetime.now()
         )
         db.add(db_obj)
         db.commit()
