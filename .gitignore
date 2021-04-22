@@ -11,3 +11,5 @@ sql_app.db
 __pycache__
 
 .pytest_cache
+
+.idea

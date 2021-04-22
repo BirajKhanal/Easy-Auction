@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from app.schemas.product import Product
+from app.models.auction import AuctionState
 
 
 # auctionalbe schemas
@@ -33,18 +34,21 @@ class Auctionable(AuctionableBase):
 
 class AuctionSessionBase(BaseModel):
     minimum_bid_amount: Optional[float]
+    auction_state: Optional[AuctionState]
 
 
 class AuctionSessionCreate(AuctionSessionBase):
     minimum_bid_amount: float
+    auction_state: AuctionState = AuctionState.CREATED
+
 
 
 class AuctionSessionUpdate(AuctionSessionBase):
     winning_bid: int
-    auction_state: str
 
 
 class AuctionSession(AuctionSessionBase):
+    ending_at: Optional[datetime]
     class Config:
         orm_mode = True
 
@@ -88,6 +92,7 @@ class AuctionUpdate(AuctionBase):
 class Auction(AuctionBase):
     id: Optional[int]
     auctionable: Auctionable
+    auction_session: AuctionSession
 
     class Config:
         orm_mode = True

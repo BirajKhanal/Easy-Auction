@@ -1,9 +1,9 @@
 from typing import List
 from datetime import datetime
-from sqlalchemy.orm import Session, joinedload, raiseload, contains_eager, Load
+from sqlalchemy.orm import Session, selectinload, raiseload, Load
 from fastapi.encoders import jsonable_encoder
 
-from app.models.auction import Auction, Auctionable, Bid
+from app.models.auction import Auction, Auctionable, Bid, AuctionState
 from app.models.product import Product, Category, ProductCondition
 from app.schemas.auction import AuctionCreate, AuctionUpdate, BidCreate, AuctionableCreate, AuctionSessionCreate
 from app.schemas.product import ProductCreate
@@ -14,33 +14,33 @@ from app.crud.product import (
 )
 from app.crud.auction.auctionable import auctionable as crud_auctionable
 from app.crud.auction.auction_session import auction_session as crud_auction_session
-from app.crud.auction.bid import bid as crud_bid
 
 
 class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
 
+    # TODO: use selectinload
     def get(self, db: Session, id: int):
         query = db.query(self.model).options(
-            joinedload(Auction.auctionable, innerjoin=True)
-            .joinedload(Auctionable.product, innerjoin=True)
-            .joinedload(Product.inventory, innerjoin=True),
-            joinedload(Auction.auctionable, innerjoin=True)
-            .joinedload(Auctionable.product, innerjoin=True)
-            .joinedload(Product.categories, innerjoin=True),
-            Load(self.model).raiseload('*')
+            selectinload(Auction.auctionable)
+            .selectinload(Auctionable.product)
+            .selectinload(Product.inventory),
+            selectinload(Auction.auctionable)
+            .selectinload(Auctionable.product)
+            .selectinload(Product.categories),
+            raiseload('*')
         )
-
         return query.filter(self.model.id == id).first()
 
+    # TODO: use selectinload
     def get_multi(self, db: Session, skip: int = 0, limit: int = 1000):
         query = db.query(self.model).options(
-            joinedload(Auction.auctionable, innerjoin=True)
-            .joinedload(Auctionable.product, innerjoin=True)
-            .joinedload(Product.inventory, innerjoin=True),
-            joinedload(Auction.auctionable, innerjoin=True)
-            .joinedload(Auctionable.product, innerjoin=True)
-            .joinedload(Product.categories, innerjoin=True),
-            Load(self.model).raiseload('*')
+            selectinload(Auction.auctionable)
+            .selectinload(Auctionable.product)
+            .selectinload(Product.inventory),
+            selectinload(Auction.auctionable)
+            .selectinload(Auctionable.product)
+            .selectinload(Product.categories),
+            raiseload('*')
         )
         return query.offset(skip).limit(limit).all()
 
@@ -49,7 +49,6 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
         db: Session,
         obj_in: AuctionCreate,
         owner_id: int,
-        ending_at: datetime,
         auctionable_id: int,
         auction_session_id: int
     ) -> Auction:
@@ -58,7 +57,6 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
             **obj_in_data,
             created_at=datetime.now(),
             owner_id=owner_id,
-            ending_at=ending_at,
             auctionable_id=auctionable_id,
             auction_session_id=auction_session_id
         )
@@ -80,6 +78,7 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
         ending_at: datetime,
         usr_id: int
     ) -> Auction:
+        # TODO: need to optimise this part and this is too ugly
         # create a product
         categories = crud_category.get_multi_by_ids(
             db=db, category_ids=categories)
@@ -109,13 +108,14 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
 
         # create an auction_session
 
-        # TODO: auction_state to STARTED
         auction_session_obj = AuctionSessionCreate(
             minimum_bid_amount=starting_bid,
+            auction_state=AuctionState.CREATED
         )
-        auction_session_db = crud_auction_session.create(
+        auction_session_db = crud_auction_session.create_with_ending_date(
             db=db,
-            obj_in=auction_session_obj
+            obj_in=auction_session_obj,
+            ending_at=ending_at
         )
 
         # create an auction
@@ -126,7 +126,6 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
             db=db,
             obj_in=auction_obj,
             owner_id=usr_id,
-            ending_at=ending_at,
             auctionable_id=auctionable_db.id,
             auction_session_id=auction_session_db.id
         )

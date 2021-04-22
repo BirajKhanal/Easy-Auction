@@ -5,7 +5,6 @@ from fastapi.encoders import jsonable_encoder
 from app.models.auction import Auctionable
 from app.models.product import Product
 from app.schemas.auction import AuctionableCreate, AuctionableUpdate
-from app.schemas.product import ProductCreate
 from app.crud.base import CRUDBase
 
 

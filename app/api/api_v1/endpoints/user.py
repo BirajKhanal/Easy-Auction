@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.crud import user as crud_user
 from app.api import dependencies
-from app.core.config import settings
 
 router = APIRouter()
 
