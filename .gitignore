@@ -13,3 +13,10 @@ __pycache__
 .pytest_cache
 
 .idea
+
+Pipfile
+
+Pipfile.lock
+
+.vim/
+
