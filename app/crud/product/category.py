@@ -12,11 +12,7 @@ class CRUDCategory(CRUDBase[Category, CategoryCreate, CategoryUpdate]):
         return db.query(self.model).filter(self.model.name == name).first()
 
     def get_multi_by_ids(self, db: Session, category_ids: List[int]) -> List[Category]:
-        cat_list: List[Category] = []
-        for category_id in category_ids:
-            cat_item = self.get(db=db, id=category_id)
-            cat_list.append(cat_item)
-        return cat_list
+        return db.query(self.model).filter(self.model.id.in_(category_ids)).all()
 
 
 category = CRUDCategory(Category)

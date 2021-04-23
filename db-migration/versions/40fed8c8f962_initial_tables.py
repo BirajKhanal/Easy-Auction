@@ -1,8 +1,8 @@
 """Initial tables
 
-Revision ID: 4d5d088a3e1e
+Revision ID: 40fed8c8f962
 Revises: 
-Create Date: 2021-04-19 13:38:56.382863
+Create Date: 2021-04-22 22:54:51.170921
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '4d5d088a3e1e'
+revision = '40fed8c8f962'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -58,7 +58,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('bid_amount', sa.Float(), nullable=True),
     sa.Column('usr_id', sa.Integer(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.ForeignKeyConstraint(['usr_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -89,7 +90,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('product_condition', sa.Enum('BRAND_NEW', 'BEST', 'GOOD', 'BAD', name='productcondition'), nullable=True),
+    sa.Column('product_condition', sa.Enum('BRAND_NEW', 'BEST', 'GOOD', 'POOR', name='productcondition'), nullable=True),
     sa.Column('inventory_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('modified_at', sa.DateTime(), nullable=True),
@@ -121,7 +122,6 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('bid_cap', sa.Float(), nullable=True),
     sa.Column('starting_bid', sa.Float(), nullable=True),
-    sa.Column('auction_state', sa.String(), nullable=True),
     sa.Column('prod_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['prod_id'], ['product.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -130,10 +130,11 @@ def upgrade():
     op.create_table('auctionsession',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('minimum_bid_amount', sa.Float(), nullable=True),
-    sa.Column('winning_bid', sa.Integer(), nullable=True),
-    sa.Column('auction_state', sa.String(), nullable=True),
+    sa.Column('auction_state', sa.Enum('CREATED', 'ENDED', 'CANCELED', 'ONGOING', name='auctionstate'), nullable=True),
     sa.Column('last_bid_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['winning_bid'], ['bid.id'], ),
+    sa.Column('ending_at', sa.DateTime(), nullable=True),
+    sa.Column('winning_bid_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['winning_bid_id'], ['bid.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_auctionsession_id'), 'auctionsession', ['id'], unique=False)
@@ -178,12 +179,16 @@ def upgrade():
     op.create_table('auction',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
-    sa.Column('ending_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('owner_id', sa.Integer(), nullable=True),
+    sa.Column('auction_winner_id', sa.Integer(), nullable=True),
     sa.Column('auctionable_id', sa.Integer(), nullable=True),
     sa.Column('auction_session_id', sa.Integer(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.ForeignKeyConstraint(['auction_session_id'], ['auctionsession.id'], ),
+    sa.ForeignKeyConstraint(['auction_winner_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['auctionable_id'], ['auctionable.id'], ),
+    sa.ForeignKeyConstraint(['owner_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_auction_id'), 'auction', ['id'], unique=False)
