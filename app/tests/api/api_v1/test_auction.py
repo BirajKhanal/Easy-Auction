@@ -19,6 +19,8 @@ def test_create_auction(
     normal_user_token_headers: Dict[str, str]
 ) -> None:
     ending_at = datetime.now() + timedelta(days=5)
+    bid_cap = random_float()
+    starting_bid = bid_cap - (bid_cap/3)
     auction_data = {
         "name": random_lower_string(),
         "categories": [
@@ -29,19 +31,20 @@ def test_create_auction(
         "description": random_lower_string(),
         "product_condition": random_product_condition().value,
         "quantity": random_int(),
-        "bid_cap": random_float(),
-        "starting_bid": random_float(),
+        "bid_cap": bid_cap,
+        "starting_bid": starting_bid,
         "ending_at": ending_at.isoformat()
     }
     r = client.post(f"{settings.API_V1_STR}/auction/",
                     headers=normal_user_token_headers,
                     json=auction_data
                     )
+    assert 200 <= r.status_code < 300
+
     created_auction = r.json()
 
     auction_in_db = crud_auction.get(db=db, id=created_auction.get("id"))
 
-    assert 200 <= r.status_code < 300
     assert auction_in_db
 
 
@@ -51,6 +54,8 @@ def test_create_auction_with_invalid_ending_at(
         normal_user_token_headers: Dict[str, str]
 ) -> None:
     ending_at = datetime.now() - timedelta(days=5)
+    bid_cap = random_float()
+    starting_bid = bid_cap - (bid_cap/3)
     auction_data = {
         "name": random_lower_string(),
         "categories": [
@@ -61,8 +66,8 @@ def test_create_auction_with_invalid_ending_at(
         "description": random_lower_string(),
         "product_condition": random_product_condition().value,
         "quantity": random_int(),
-        "bid_cap": random_float(),
-        "starting_bid": random_float(),
+        "bid_cap": bid_cap,
+        "starting_bid": starting_bid,
         "ending_at": ending_at.isoformat()
     }
     r = client.post(f"{settings.API_V1_STR}/auction/",
@@ -113,14 +118,15 @@ def test_bid_in_already_finished_auction(
         normal_user_token_headers: Dict[str, str]
 
 ) -> None:
-    ending_at = datetime.now() + timedelta(seconds=1)
-    bid_amount = random_float()
+    ending_at = datetime.now()
     auction = create_random_auction(db, ending_at=ending_at)
+    bid_amount = auction.auction_session.minimum_bid_amount + random_float()
     time.sleep(3)
     r = client.post(f"{settings.API_V1_STR}/auction/{auction.id}/bid",
                     headers=normal_user_token_headers,
                     json=bid_amount
                     )
+    print(r.json())
     assert r.status_code == 400
 
 

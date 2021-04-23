@@ -14,12 +14,13 @@ from app.crud.product import (
 )
 from app.crud.auction.auctionable import auctionable as crud_auctionable
 from app.crud.auction.auction_session import auction_session as crud_auction_session
+from app.crud.auction.bid import bid as crud_bid
 
 
 class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
 
     # TODO: use selectinload
-    def get(self, db: Session, id: int):
+    def get_complete(self, db: Session, id: int) -> Auction:
         query = db.query(self.model).options(
             selectinload(Auction.auctionable)
             .selectinload(Auctionable.product)
@@ -30,7 +31,28 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
             selectinload(Auction.auction_session),
             raiseload('*')
         )
-        return query.get(id)
+        db_obj = query.get(id)
+        db_obj = CRUDAuction.check_if_auction_ended(db=db, db_obj=db_obj)
+        return db_obj
+
+    def get(self, db: Session, id: int) -> Auction:
+        query = db.query(self.model).options(
+            selectinload(Auction.auctionable)
+        )
+        db_obj = query.get(id)
+        db_obj = CRUDAuction.check_if_auction_ended(db=db, db_obj=db_obj)
+        return db_obj
+
+    @staticmethod
+    def check_if_auction_ended(db: Session, db_obj: Auction) -> Auction:
+        if db_obj.auction_session.ending_at < datetime.now():
+            winning_bid = crud_bid.get(db, id=db_obj.auction_session.winning_bid_id)
+            if winning_bid:
+                db_obj.auction_winner_id = winning_bid.usr_id
+            db.add(db_obj)
+            db.commit()
+            db.refresh(db_obj)
+        return db_obj
 
     # TODO: use selectinload
     def get_multi(self, db: Session, skip: int = 0, limit: int = 1000):
@@ -44,6 +66,15 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
             raiseload('*')
         )
         return query.offset(skip).limit(limit).all()
+
+    def get_multi_by_owner(
+            self, db: Session, *, usr_id: int, skip: int = 0, limit: int = 100
+    ) -> List[Auction]:
+        # TODO: optimize the query beceause this is nested schema
+        return db.query(
+            self.model).filter(
+            self.model.owner_id == usr_id).offset(skip).limit(limit).all()
+
 
     def create_with_auctionable_and_session(
         self,

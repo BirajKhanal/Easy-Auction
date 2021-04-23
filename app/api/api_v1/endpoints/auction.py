@@ -20,7 +20,7 @@ def get_auction(
     id: int,
     db: Session = Depends(get_db)
 ):
-    auction = crud_auction.get(
+    auction = crud_auction.get_complete(
         db=db,
         id=id
     )

@@ -21,17 +21,19 @@ class CRUDAuctionSession(CRUDBase[AuctionSession, AuctionSessionCreate, AuctionS
         return db_obj
 
     @staticmethod
-    def check_if_auction_ended(db: Session, db_obj: AuctionSession):
+    def check_if_auction_ended(db: Session, db_obj: AuctionSession) -> AuctionSession:
         if db_obj.ending_at and db_obj.ending_at < datetime.now():
             db_obj.auction_state = AuctionState.ENDED
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
+            db.add(db_obj)
+            db.commit()
+            db.refresh(db_obj)
+        return db_obj
 
     def get(self, db: Session, id: int) -> AuctionSession:
         db_obj = db.query(self.model).options(
-            selectinload(self.model.auction)).get(id)
-        CRUDAuctionSession.check_if_auction_ended(db, db_obj)
+            selectinload(self.model.auction)
+        ).get(id)
+        db_obj = CRUDAuctionSession.check_if_auction_ended(db, db_obj)
         return db_obj
 
     def bid_in_auction(

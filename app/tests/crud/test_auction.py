@@ -116,24 +116,25 @@ def test_bid_in_auction(
     assert bids_in_db[2].id == bid3.id
     assert bids_in_db[2].usr_id == bidder.id
 
-    def test_auction_winner_is_set(
-            db: Session
-    ) -> None:
-        ending_at = datetime.now() + timedelta(seconds=2)
-        current_bidder = create_random_user(db)
-        bid_amount = random_float()
-        current_auction = create_random_auction(
-            db,
-            ending_at=ending_at,
-        )
-        crud_auction_session.bid_in_auction(
-            db=db,
-            id=current_auction.id,
-            bid_amount=bid_amount,
-            bidder_id=current_bidder.id
-        )
-        time.sleep(3)
-        assert current_auction.auction_winner_id == bidder.id
+def test_auction_winner_is_set(
+        db: Session
+) -> None:
+    ending_at = datetime.now() + timedelta(seconds=3)
+    current_bidder = create_random_user(db)
+    bid_amount = random_float()
+    current_auction = create_random_auction(
+        db,
+        ending_at=ending_at,
+    )
+    crud_auction_session.bid_in_auction(
+        db=db,
+        id=current_auction.id,
+        bid_amount=bid_amount,
+        bidder_id=current_bidder.id
+    )
+    time.sleep(5)
+    current_auction = crud_auction.get(db, id=current_auction.id)
+    assert current_auction.auction_winner_id == current_bidder.id
 
 
 def test_soft_delete_auction(
@@ -180,3 +181,21 @@ def test_auction_states(
     time.sleep(5)
     current_auction_session = crud_auction_session.get(db=db, id=current_auction.id)
     assert current_auction_session.auction_state == AuctionState.ENDED
+
+
+def test_get_auction_by_user(
+        db: Session
+) -> None:
+    user = create_random_user(db)
+    auction1 = create_random_auction(db, user=user)
+    auction2 = create_random_auction(db, user=user)
+
+    auctions_in_db = crud_auction.get_multi_by_owner(
+        db=db,
+        usr_id=user.id,
+    )
+
+    assert auctions_in_db
+    assert auctions_in_db[0].id == auction1.id
+    assert auctions_in_db[1].id == auction2.id
+
