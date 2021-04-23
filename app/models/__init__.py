@@ -19,6 +19,7 @@ from app.models.sell import (
     Discount,
     ShoppingSession,
     CartItem,
+    CartLog
 )
 
 from app.models.user import (

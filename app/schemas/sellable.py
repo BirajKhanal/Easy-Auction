@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime
 
 from pydantic import BaseModel, HttpUrl
 from app.schemas.user import User
@@ -17,27 +18,8 @@ class SellableUpdate(SellableBase):
 
 
 class Sellable(SellableBase):
-    id: Optional[int]
+    id: int
 
-    class Config:
-        orm_mode = True
-
-# CartItem schema
-
-
-class CartItemBase(BaseModel):
-    pass
-
-
-class CartItemCreate(CartItemBase):
-    pass
-
-
-class CartItemUpdate(CartItemBase):
-    pass
-
-
-class CartItem(CartItemBase):
     class Config:
         orm_mode = True
 
@@ -45,7 +27,9 @@ class CartItem(CartItemBase):
 # ShoppingSession schema
 
 class ShoppingSessionBase(BaseModel):
-    pass
+    total: Optional[int]
+    created_at: Optional[datetime]
+    modified_at: Optional[datetime]
 
 
 class ShoppingSessionCreate(ShoppingSessionBase):

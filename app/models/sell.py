@@ -49,3 +49,13 @@ class CartItem(Base):
 
     sellables = relationship("Sellable")
     shopping_session = relationship("ShoppingSession", back_populates='cart')
+
+
+
+class CartLog(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    cartitem_id = Column(Integer, ForeignKey('cartitem.id'))
+    quantity = Column(Integer)
+    created_at = Column(DateTime)
+
+    cartitem = relationship("CartItem")
