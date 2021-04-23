@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, HttpUrl
 from app.schemas.category import Category
-from app.schemas import auction, sellable, category
+from app.schemas import auction, category
 from app.models.product import ProductCondition
 
 

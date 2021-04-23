@@ -3,6 +3,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, HttpUrl
 from app.schemas.user import User
+from app.schemas.product import Product
+from app.schemas.discount import Discount
 
 
 class SellableBase(BaseModel):
@@ -18,7 +20,9 @@ class SellableUpdate(SellableBase):
 
 
 class Sellable(SellableBase):
-    id: int
+    id: Optional[int]
+    product: Product
+    discount: Discount
 
     class Config:
         orm_mode = True
@@ -33,7 +37,8 @@ class ShoppingSessionBase(BaseModel):
 
 
 class ShoppingSessionCreate(ShoppingSessionBase):
-    pass
+    total: int
+    created_at: Optional[datetime]
 
 
 class ShoppingSessionUpdate(ShoppingSessionBase):
@@ -41,25 +46,8 @@ class ShoppingSessionUpdate(ShoppingSessionBase):
 
 
 class ShoppingSession(ShoppingSessionBase):
-    class Config:
-        orm_mode = True
+    id: Optional[int]
+    user: User
 
-
-# Discount shchema
-
-
-class DiscountBase(BaseModel):
-    pass
-
-
-class DiscountCreate(DiscountBase):
-    pass
-
-
-class DiscountUpdate(DiscountBase):
-    pass
-
-
-class Discount(DiscountBase):
     class Config:
         orm_mode = True

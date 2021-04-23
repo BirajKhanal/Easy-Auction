@@ -7,8 +7,6 @@ from app.schemas.sellable import Sellable
 
 
 class CartItemBase(BaseModel):
-    sellables: Optional[List[Sellable]]
-    owner: Optional[User]
     quantity: Optional[int]
     created_at: Optional[datetime]
     modified_at: Optional[datetime]
@@ -16,7 +14,9 @@ class CartItemBase(BaseModel):
 
 class CartItemCreate(CartItemBase):
     quantity: int
-    owner: int
+    sellable_id: int
+    created_at: datetime
+    session_id: int
 
 
 class CartItemUpdate(CartItemBase):
@@ -25,6 +25,7 @@ class CartItemUpdate(CartItemBase):
 
 class Cart(CartItemBase):
     id: Optional[int]
+    sellable: Sellable
 
     class Config:
         orm_mode = True
