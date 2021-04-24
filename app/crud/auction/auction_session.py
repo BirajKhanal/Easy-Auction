@@ -12,6 +12,21 @@ from app.crud.base import CRUDBase
 
 class CRUDAuctionSession(CRUDBase[AuctionSession, AuctionSessionCreate, AuctionSessionUpdate]):
 
+    @staticmethod
+    def check_if_auction_ended(db_obj: AuctionSession) -> bool:
+        if db_obj.ending_at and db_obj.ending_at < datetime.now():
+            return True
+        return False
+
+    @staticmethod
+    def update_auction_state(db: Session, db_obj: AuctionSession, state: AuctionState, commit=True) -> AuctionSession:
+        db_obj.auction_state = state
+        if commit:
+            db.add(db_obj)
+            db.commit()
+            db.refresh(db_obj)
+        return db_obj
+
     def create_with_ending_date(self, db: Session, obj_in: AuctionSessionCreate, ending_at: datetime) -> AuctionSession:
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data, ending_at=ending_at)  # type: ignore
@@ -20,20 +35,13 @@ class CRUDAuctionSession(CRUDBase[AuctionSession, AuctionSessionCreate, AuctionS
         db.refresh(db_obj)
         return db_obj
 
-    @staticmethod
-    def check_if_auction_ended(db: Session, db_obj: AuctionSession) -> AuctionSession:
-        if db_obj.ending_at and db_obj.ending_at < datetime.now():
-            db_obj.auction_state = AuctionState.ENDED
-            db.add(db_obj)
-            db.commit()
-            db.refresh(db_obj)
-        return db_obj
-
     def get(self, db: Session, id: int) -> AuctionSession:
         db_obj = db.query(self.model).options(
             selectinload(self.model.auction)
         ).get(id)
-        db_obj = CRUDAuctionSession.check_if_auction_ended(db, db_obj)
+
+        if self.check_if_auction_ended(db_obj):
+            db_obj = self.update_auction_state(db, db_obj, AuctionState.ENDED)
         return db_obj
 
     def bid_in_auction(
@@ -63,6 +71,7 @@ class CRUDAuctionSession(CRUDBase[AuctionSession, AuctionSessionCreate, AuctionS
         winning_bid = crud_bid.get(db, id=current_auction_session.winning_bid_id)
         if winning_bid is None or bid_db.bid_amount > winning_bid.bid_amount:
             current_auction_session.winning_bid_id = bid_db.id
+
         db.add(current_auction_session)
         db.commit()
         db.refresh(current_auction_session)

@@ -32,7 +32,9 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
             raiseload('*')
         )
         db_obj = query.get(id)
-        db_obj = CRUDAuction.check_if_auction_ended(db=db, db_obj=db_obj)
+
+        if self.check_if_auction_ended(db_obj=db_obj):
+            db_obj = self.update_auction_winner(db, db_obj)
         return db_obj
 
     def get(self, db: Session, id: int) -> Auction:
@@ -40,18 +42,25 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
             selectinload(Auction.auctionable)
         )
         db_obj = query.get(id)
-        db_obj = CRUDAuction.check_if_auction_ended(db=db, db_obj=db_obj)
+        if self.check_if_auction_ended(db_obj=db_obj):
+            db_obj = self.update_auction_winner(db, db_obj)
         return db_obj
 
     @staticmethod
-    def check_if_auction_ended(db: Session, db_obj: Auction) -> Auction:
+    def check_if_auction_ended(db_obj: Auction) -> bool:
         if db_obj.auction_session.ending_at < datetime.now():
-            winning_bid = crud_bid.get(db, id=db_obj.auction_session.winning_bid_id)
-            if winning_bid:
-                db_obj.auction_winner_id = winning_bid.usr_id
-            db.add(db_obj)
-            db.commit()
-            db.refresh(db_obj)
+            return True
+        return False
+
+    @staticmethod
+    def update_auction_winner(db: Session, db_obj: Auction, commit=True) -> Auction:
+        winning_bid = crud_bid.get(db, id=db_obj.auction_session.winning_bid_id)
+        if winning_bid:
+            db_obj.auction_winner_id = winning_bid.usr_id
+            if commit:
+                db.add(db_obj)
+                db.commit()
+                db.refresh(db_obj)
         return db_obj
 
     # TODO: use selectinload
@@ -63,6 +72,7 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
             selectinload(Auction.auctionable)
             .selectinload(Auctionable.product)
             .selectinload(Product.categories),
+            selectinload(Auction.auction_session),
             raiseload('*')
         )
         return query.offset(skip).limit(limit).all()
@@ -70,9 +80,17 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
     def get_multi_by_owner(
             self, db: Session, *, usr_id: int, skip: int = 0, limit: int = 100
     ) -> List[Auction]:
-        # TODO: optimize the query beceause this is nested schema
         return db.query(
-            self.model).filter(
+            self.model).options(
+            selectinload(Auction.auctionable)
+                .selectinload(Auctionable.product)
+                .selectinload(Product.inventory),
+            selectinload(Auction.auctionable)
+                .selectinload(Auctionable.product)
+                .selectinload(Product.categories),
+            selectinload(Auction.auction_session),
+            raiseload('*')
+        ).filter(
             self.model.owner_id == usr_id).offset(skip).limit(limit).all()
 
 
@@ -138,7 +156,6 @@ class CRUDAuction(CRUDBase[Auction, AuctionCreate, AuctionUpdate]):
         )
 
         # create an auction_session
-
         auction_session_obj = AuctionSessionCreate(
             minimum_bid_amount=starting_bid,
             auction_state=AuctionState.CREATED
