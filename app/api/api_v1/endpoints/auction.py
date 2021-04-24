@@ -64,9 +64,12 @@ def bid_in_auction(
 
     # check if auction ended or canceled
     current_auction_session = auction.auction_session
+    state_list = [AuctionState.ENDED, AuctionState.CANCELED]
 
-    if current_auction_session.auction_state in [
-            AuctionState.ENDED, AuctionState.CANCELED]:
+    if current_auction_session.auction_state in state_list or crud_auction_session.check_if_auction_ended(current_auction_session):
+        if current_auction_session.auction_state not in state_list:
+            crud_auction_session.update_auction_state(
+                db, current_auction_session, AuctionState.ENDED)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"the specified auction has already been {current_auction_session.auction_state}")

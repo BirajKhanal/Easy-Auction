@@ -1,5 +1,5 @@
-from typing import List
-from sqlalchemy.orm import Session, join
+from typing import List, Optional
+from sqlalchemy.orm import Session, join, selectinload
 from fastapi.encoders import jsonable_encoder
 
 from app.models.auction import Auctionable
@@ -8,8 +8,14 @@ from app.schemas.auction import AuctionableCreate, AuctionableUpdate
 from app.crud.base import CRUDBase
 
 
-class CRUDAuctionable(
-        CRUDBase[Auctionable, AuctionableCreate, AuctionableUpdate]):
+class CRUDAuctionable(CRUDBase[Auctionable, AuctionableCreate, AuctionableUpdate]):
+
+    def get(self, db: Session, id: int) -> Optional[Auctionable]:
+        return db.query(self.model).options(
+            selectinload(Auctionable.product)
+            .selectinload(Product.inventory)
+        ).filter(self.model.id == id).first()
+
     def create_with_product(
             self,
             db: Session,

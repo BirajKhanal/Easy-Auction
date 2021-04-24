@@ -4,10 +4,12 @@ from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.models.auction import AuctionState
 from app.crud.auction.auction import auction as crud_auction
 from app.crud.auction.auction_session import auction_session as crud_auction_session
+from app.crud.auction.auctionable import auctionable as crud_auctionable
 from app.core.config import settings
-from app.tests.utils.utils import  random_lower_string, random_float, random_int
+from app.tests.utils.utils import random_lower_string, random_float, random_int
 from app.tests.utils.product import random_product_condition, create_random_category
 from app.tests.utils.auction import create_random_auction
 from app.tests.utils.user import create_random_user
@@ -18,19 +20,26 @@ def test_create_auction(
     db: Session,
     normal_user_token_headers: Dict[str, str]
 ) -> None:
+    name = random_lower_string()
+    cat1 = create_random_category(db)
+    cat2 = create_random_category(db)
+    cat3 = create_random_category(db)
+    description = random_lower_string()
+    product_condition = random_product_condition().value
+    quantity = random_int()
     ending_at = datetime.now() + timedelta(days=5)
     bid_cap = random_float()
     starting_bid = bid_cap - (bid_cap/3)
     auction_data = {
-        "name": random_lower_string(),
+        "name": name,
         "categories": [
-            create_random_category(db).id,
-            create_random_category(db).id,
-            create_random_category(db).id
+            cat1.id,
+            cat2.id,
+            cat3.id
         ],
-        "description": random_lower_string(),
-        "product_condition": random_product_condition().value,
-        "quantity": random_int(),
+        "description": description,
+        "product_condition": product_condition,
+        "quantity": quantity,
         "bid_cap": bid_cap,
         "starting_bid": starting_bid,
         "ending_at": ending_at.isoformat()
@@ -46,6 +55,23 @@ def test_create_auction(
     auction_in_db = crud_auction.get(db=db, id=created_auction.get("id"))
 
     assert auction_in_db
+    assert auction_in_db.name == name
+    assert auction_in_db.auction_session
+    assert auction_in_db.auction_session.minimum_bid_amount == starting_bid
+    assert auction_in_db.auction_session.auction_state == AuctionState.CREATED
+    assert auction_in_db.auction_session.ending_at == ending_at
+
+    auctionable_in_db = crud_auctionable.get(
+        db, id=auction_in_db.auctionable_id)
+    assert auctionable_in_db
+    assert auctionable_in_db.bid_cap == bid_cap
+    assert auctionable_in_db.starting_bid == starting_bid
+
+    assert auctionable_in_db.product.name == name
+    assert auctionable_in_db.product.description == description
+    assert auctionable_in_db.product.product_condition == product_condition
+
+    assert auctionable_in_db.product.inventory.quantity == quantity
 
 
 def test_create_auction_with_invalid_ending_at(
@@ -128,8 +154,6 @@ def test_bid_in_already_finished_auction(
                     )
     print(r.json())
     assert r.status_code == 400
-
-
 
 
 def test_get_specific_user_auction(

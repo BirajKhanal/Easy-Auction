@@ -76,6 +76,8 @@ def test_get_single_auction(
     auction_in_db = crud_auction.get(db=db, id=auction.id)
 
     assert auction_in_db
+    assert auction.auctionable_id == auction_in_db.auctionable_id
+    assert auction.auction_session_id == auction_in_db.auction_session_id
 
 
 def test_bid_in_auction(
@@ -115,6 +117,7 @@ def test_bid_in_auction(
     assert bids_in_db[1].usr_id == bidder.id
     assert bids_in_db[2].id == bid3.id
     assert bids_in_db[2].usr_id == bidder.id
+
 
 def test_auction_winner_is_set(
         db: Session
@@ -179,7 +182,8 @@ def test_auction_states(
     assert current_auction.auction_session.auction_state == AuctionState.ONGOING
 
     time.sleep(5)
-    current_auction_session = crud_auction_session.get(db=db, id=current_auction.id)
+    current_auction_session = crud_auction_session.get(
+        db=db, id=current_auction.id)
     assert current_auction_session.auction_state == AuctionState.ENDED
 
 
@@ -198,4 +202,3 @@ def test_get_auction_by_user(
     assert auctions_in_db
     assert auctions_in_db[0].id == auction1.id
     assert auctions_in_db[1].id == auction2.id
-
