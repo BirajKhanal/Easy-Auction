@@ -166,42 +166,45 @@ def test_get_specific_user_auction(
 def test_get_auction_bid(
     client: TestClient,
     db: Session,
+    normal_user_token_headers: Dict[str, str]
 ):
     auction = create_random_auction(db)
-    user1 = create_random_user(db)
-    user2 = create_random_user(db)
-    user3 = create_random_user(db)
-    bid1 = random_float()
-    bid2 = random_float()
-    bid3 = random_float()
+    bid_amount1 = random_float() + auction.auction_session.minimum_bid_amount + 10
+    bid_amount2 = random_float() + bid_amount1
+    bid_amount3 = random_float() + bid_amount2
 
-    bid1_in_db = crud_auction_session.bid_in_auction(
-        db=db,
-        id=auction.id,
-        bid_amount=bid1,
-        bidder_id=user1.id
-    )
-    bid2_in_db = crud_auction_session.bid_in_auction(
-        db=db,
-        id=auction.id,
-        bid_amount=bid2,
-        bidder_id=user2.id
-    )
-    bid3_in_db = crud_auction_session.bid_in_auction(
-        db=db,
-        id=auction.id,
-        bid_amount=bid3,
-        bidder_id=user3.id
-    )
+    bid1 = client.post(f"{settings.API_V1_STR}/auction/{auction.id}/bid",
+                       headers=normal_user_token_headers,
+                       json=bid_amount1
+                       )
+
+    bid2 = client.post(f"{settings.API_V1_STR}/auction/{auction.id}/bid",
+                       headers=normal_user_token_headers,
+                       json=bid_amount2
+                       )
+
+    bid3 = client.post(f"{settings.API_V1_STR}/auction/{auction.id}/bid",
+                       headers=normal_user_token_headers,
+                       json=bid_amount3
+                       )
+    bid1 = bid1.json()
+    bid2 = bid2.json()
+    bid3 = bid3.json()
 
     r = client.get(f"{settings.API_V1_STR}/auction/{auction.id}/bid")
     assert 200 <= r.status_code < 300
     bids_in_response = r.json()
     print(bids_in_response)
+    print(bid1)
+    print(bid2)
+    print(bid3)
 
-    assert bids_in_response[0]["id"] == bid1_in_db.id
-    assert bids_in_response[1]["id"] == bid2_in_db.id
-    assert bids_in_response[2]["id"] == bid3_in_db.id
+    assert bids_in_response[0]["id"] == bid1['id']
+    assert bids_in_response[1]["id"] == bid2['id']
+    assert bids_in_response[2]["id"] == bid3['id']
+    assert bids_in_response[0]["bid_amount"] == bid1['bid_amount']
+    assert bids_in_response[1]["bid_amount"] == bid2['bid_amount']
+    assert bids_in_response[2]["bid_amount"] == bid3['bid_amount']
 
 
 def test_cancel_bid(

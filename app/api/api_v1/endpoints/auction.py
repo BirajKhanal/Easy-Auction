@@ -5,11 +5,14 @@ from sqlalchemy.orm import Session
 
 from app.models.product import ProductCondition
 from app.models.user import User
-from app.models.auction import AuctionState
+from app.models.auction import AuctionState, AuctionSession, BID_INCREASE_AMOUNT
 from app.api.dependencies import get_db, get_current_active_user
-from app.schemas.auction import Auction, Bid
+from app.schemas.product import ProductCreate
+from app.schemas.auction import Auction, Bid, BidCreate, AuctionCreate, AuctionableCreate, AuctionSessionCreate
+from app.crud.product.category import category as crud_category
 from app.crud.auction import auction as crud_auction
-from app.crud.auction import auction_session as crud_auction_session
+from app.crud.auction.auction_session import auction_session as crud_auction_session, is_auction_ended
+from app.crud.auction.auctionable import auctionable as crud_auctionable
 from app.crud.auction import bid as crud_bid
 
 router = APIRouter()
@@ -59,33 +62,31 @@ def bid_in_auction(
     if not auction:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="specified auction not found"
+            detail="auction with that ID not found"
         )
 
     # check if auction ended or canceled
-    current_auction_session = auction.auction_session
+    auction_session: AuctionSession = auction.auction_session
     state_list = [AuctionState.ENDED, AuctionState.CANCELED]
 
-    if current_auction_session.auction_state in state_list or crud_auction_session.check_if_auction_ended(current_auction_session):
-        if current_auction_session.auction_state not in state_list:
-            crud_auction_session.update_auction_state(
-                db, current_auction_session, AuctionState.ENDED)
+    if is_auction_ended(auction_session):
+        if auction_session.auction_state not in state_list:
+            auction_session = crud_auction_session.update_auction_state(
+                db, auction_session, AuctionState.ENDED)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"the specified auction has already been {current_auction_session.auction_state}")
+            detail=f"the auction with that ID has already been {auction_session.auction_state}")
 
-    if bid_amount < current_auction_session.minimum_bid_amount:
+    if bid_amount < auction_session.minimum_bid_amount:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="bid amount must be greater than minimum bid amount"
         )
 
-    return crud_auction_session.bid_in_auction(
-        db=db,
-        id=auction.id,
-        bid_amount=bid_amount,
-        bidder_id=current_user.id
-    )
+    bid_obj = BidCreate(bid_amount=bid_amount, usr_id=current_user.id)
+    bid_db = crud_bid.create(db, obj_in=bid_obj)
+
+    return crud_auction_session.add_new_bid(db, db_obj=auction_session, bid_db=bid_db)
 
 
 @router.get('/{id}/bid', response_model=List[Bid])
@@ -132,18 +133,49 @@ def create_auction(
             detail="ending date should be greater than today's date"
         )
 
-    auction_db = crud_auction.create_with_owner(
-        db=db,
+    categories = crud_category.get_multi_by_ids(
+        db=db, category_ids=categories)
+
+    product_obj = ProductCreate(
         name=name,
         description=description,
-        categories=categories,
-        product_condition=product_condition,
-        quantity=quantity,
+        product_condition=product_condition
+    )
+
+    auctionable_obj = AuctionableCreate(
         bid_cap=bid_cap,
         starting_bid=starting_bid,
-        ending_at=ending_at,
-        usr_id=current_user.id
     )
+
+    auctionable_db = crud_auctionable.create_with_product(
+        db=db,
+        obj_in=auctionable_obj,
+        product_in=product_obj,
+        categories=categories,
+        usr_id=current_user.id,
+        quantity=quantity
+    )
+
+    auction_session_obj = AuctionSessionCreate(
+        minimum_bid_amount=starting_bid,
+        auction_state=AuctionState.CREATED
+    )
+
+    auction_session_db = crud_auction_session.create_with_ending_date(
+        db=db,
+        obj_in=auction_session_obj,
+        ending_at=ending_at
+    )
+
+    auction_obj = AuctionCreate(
+        name=name,
+        auctionable_id=auctionable_db.id,
+        auction_session_id=auction_session_db.id,
+        owner_id=current_user.id
+    )
+
+    auction_db = crud_auction.create(db, obj_in=auction_obj)
+
     return auction_db
 
 

@@ -1,25 +1,30 @@
 from typing import List
 from datetime import datetime
 from sqlalchemy.orm import Session, selectinload
-from fastapi.encoders import  jsonable_encoder
+from fastapi.encoders import jsonable_encoder
 
 from app.models.auction import Bid, AuctionState, BID_INCREASE_AMOUNT
 from app.crud.auction.bid import bid as crud_bid
+from app.crud.auction.auction import auction as crud_auction
 from app.models.auction import AuctionSession
 from app.schemas.auction import AuctionSessionCreate, AuctionSessionUpdate, BidCreate
 from app.crud.base import CRUDBase
 
 
+def is_auction_ended(db_obj: AuctionSession) -> bool:
+    if db_obj.ending_at and db_obj.ending_at < datetime.now():
+        return True
+    return False
+
+
 class CRUDAuctionSession(CRUDBase[AuctionSession, AuctionSessionCreate, AuctionSessionUpdate]):
 
     @staticmethod
-    def check_if_auction_ended(db_obj: AuctionSession) -> bool:
-        if db_obj.ending_at and db_obj.ending_at < datetime.now():
-            return True
-        return False
-
-    @staticmethod
     def update_auction_state(db: Session, db_obj: AuctionSession, state: AuctionState, commit=True) -> AuctionSession:
+        winning_bid = crud_bid.get(
+            db, id=db_obj.winning_bid_id)
+        if winning_bid:
+            db_obj.auction.auction_winner_id = winning_bid.usr_id
         db_obj.auction_state = state
         if commit:
             db.add(db_obj)
@@ -35,56 +40,53 @@ class CRUDAuctionSession(CRUDBase[AuctionSession, AuctionSessionCreate, AuctionS
         db.refresh(db_obj)
         return db_obj
 
+    """
+    gets aution table along with auction_session table
+    updates the auction state
+    """
+
     def get(self, db: Session, id: int) -> AuctionSession:
         db_obj = db.query(self.model).options(
             selectinload(self.model.auction)
         ).get(id)
 
-        if self.check_if_auction_ended(db_obj):
+        # TODO: this should be done by some scheduler
+        if is_auction_ended(db_obj) and db_obj.auction_state not in [AuctionState.CANCELED, AuctionState.ENDED]:
             db_obj = self.update_auction_state(db, db_obj, AuctionState.ENDED)
         return db_obj
 
-    def bid_in_auction(
-        self,
-        db: Session,
-        id: int,
-        bid_amount: float,
-        bidder_id: int
-    ) -> Bid:
+    """
+    Add new Bid to the AuctionSession
+    Update AuctionState from CREATED To ONGOING
+    Update minimum_bid_amount
+    Update winninb_bid
+    """
 
-        current_auction_session = self.get(db=db, id=id)
+    def add_new_bid(self, db: Session, db_obj: AuctionSession, bid_db: Bid) -> Bid:
+        if db_obj.auction_state == AuctionState.CREATED:
+            db_obj.auction_state = AuctionState.ONGOING
 
-        # if first bid in auction then set auction_state from created to ongoing
-        if current_auction_session.auction_state == AuctionState.CREATED.value:
-            current_auction_session.auction_state = AuctionState.ONGOING
+        db_obj.minimum_bid_amount = bid_db.bid_amount + BID_INCREASE_AMOUNT
+        db_obj.bids.append(bid_db)
+        db_obj.last_bid_at = bid_db.created_at
 
-        bid_obj = BidCreate(bid_amount=bid_amount)
-        bid_db = crud_bid.create_with_owner(
-            db=db, obj_in=bid_obj, usr_id=bidder_id)
+        w_b = db_obj.winning_bid
+        if not w_b or bid_db.bid_amount > w_b.bid_amount:
+            db_obj.winning_bid = bid_db
 
-        current_auction_session.minimum_bid_amount = \
-            current_auction_session.minimum_bid_amount + BID_INCREASE_AMOUNT
-
-        current_auction_session.bids.append(bid_db)
-        current_auction_session.last_bid_at = bid_db.created_at
-
-        winning_bid = crud_bid.get(db, id=current_auction_session.winning_bid_id)
-        if winning_bid is None or bid_db.bid_amount > winning_bid.bid_amount:
-            current_auction_session.winning_bid_id = bid_db.id
-
-        db.add(current_auction_session)
+        db.add(db_obj)
         db.commit()
-        db.refresh(current_auction_session)
+        db.refresh(db_obj)
+
         return bid_db
 
-    def get_bids(
-            self,
-            db: Session,
-            id: int,
-    ) -> List[Bid]:
-        # TODO: filter by auction_session_id
-        auction_session = self.get(db, id=id)
-        return auction_session.bids
+    # def get_bids(
+    #         self,
+    #         db: Session,
+    #         id: int,
+    # ) -> List[Bid]:
+    #     auction_session = self.get(db, id=id)
+    #     return auction_session.bids
 
 
 auction_session = CRUDAuctionSession(AuctionSession)
