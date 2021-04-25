@@ -42,13 +42,13 @@ class AuctionSessionCreate(AuctionSessionBase):
     auction_state: AuctionState = AuctionState.CREATED
 
 
-
 class AuctionSessionUpdate(AuctionSessionBase):
     winning_bid: int
 
 
 class AuctionSession(AuctionSessionBase):
     ending_at: Optional[datetime]
+
     class Config:
         orm_mode = True
 
@@ -61,6 +61,7 @@ class BidBase(BaseModel):
 
 class BidCreate(BidBase):
     bid_amount: float
+    usr_id: int
 
 
 class BidUpdate(BidBase):
@@ -82,7 +83,9 @@ class AuctionBase(BaseModel):
 
 
 class AuctionCreate(AuctionBase):
-    pass
+    auctionable_id: int
+    auction_session_id: int
+    owner_id: int
 
 
 class AuctionUpdate(AuctionBase):
