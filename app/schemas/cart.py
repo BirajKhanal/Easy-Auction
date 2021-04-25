@@ -1,24 +1,48 @@
 from typing import List, Optional
+from datetime import datetime
 
 from pydantic import BaseModel, HttpUrl
 from app.schemas.user import User
 from app.schemas.sellable import Sellable
 
 
-class CartBase(BaseModel):
-    sellables: Optional[List[Sellable]]
-    owner: Optional[User]
+class CartItemBase(BaseModel):
+    quantity: Optional[int]
+    created_at: Optional[datetime]
+    modified_at: Optional[datetime]
 
 
-class CartCreate(CartBase):
+class CartItemCreate(CartItemBase):
+    quantity: int
+    sellable_id: int
+    created_at: datetime
+    session_id: int
+
+
+class CartItemUpdate(CartItemBase):
     pass
 
 
-class CartUpdate(CartBase):
+class Cart(CartItemBase):
+    id: Optional[int]
+    sellable: Sellable
+
+    class Config:
+        orm_mode = True
+
+
+class CartLogBase(BaseModel):
+    quantity: Optional[int]
+    created_at: Optional[int]
+
+
+class CartLogCreate(CartLogBase):
     pass
 
+class CartLogUpdate(CartLogBase):
+    pass
 
-class Cart(CartBase):
+class CartLog(CartLogBase):
     id: Optional[int]
 
     class Config:
