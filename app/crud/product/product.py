@@ -20,6 +20,7 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
         quantity: int
     ) -> Product:
         obj_in_data = jsonable_encoder(obj_in)
+        print(obj_in_data, usr_id, quantity, categories)
         inventory_obj = InventoryCreate(quantity=quantity)
         inventory_db = crud_inventory.create(
             db=db, obj_in=inventory_obj, restocked_at=datetime.now())
